@@ -47,7 +47,7 @@
 #include <moveit/kinematics_base/kinematics_base.h>
 #include <moveit/rdf_loader/rdf_loader.h>
 
-#include <pluginlib/class_list_macros.h>
+#include <pluginlib/class_list_macros.hpp>
 #include <srdfdom/model.h>
 #include <urdf/model.h>
 #include <urdf_model/model.h>

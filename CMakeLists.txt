@@ -1,6 +1,13 @@
 cmake_minimum_required(VERSION 3.15)
 project(bio_ik)
 
+if(NOT CMAKE_CXX_STANDARD)
+  set(CMAKE_CXX_STANDARD 14)
+endif()
+if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  add_compile_options(-Wall -Wextra -Wpedantic)
+endif()
+
 if(NOT CMAKE_CONFIGURATION_TYPES AND NOT CMAKE_BUILD_TYPE)
   message("${PROJECT_NAME}: You did not request a specific build type: Choosing 'Release' for maximum performance")
   set(CMAKE_BUILD_TYPE Release)
@@ -102,25 +109,29 @@ target_include_directories(${PROJECT_NAME} PUBLIC
   $<INSTALL_INTERFACE:include>
 )
 
-target_link_libraries(
+ament_target_dependencies(
   ${PROJECT_NAME}
   PUBLIC
-    Eigen3::Eigen
+    Eigen3
     moveit_core
     moveit_ros_planning
     pluginlib
     rclcpp
     tf2
+    tf2_ros
     tf2_kdl
     tf2_geometry_msgs
-
-    ${FANN_LIBRARIES}
-    ${OpenMP_LIBS}
-
-    -static-libgcc
-    -static-libstdc++
 )
 
+target_link_libraries(
+  ${PROJECT_NAME}
+  PUBLIC
+  ${FANN_LIBRARIES}
+  ${OpenMP_LIBS}
+
+  -static-libgcc
+  -static-libstdc++
+)
 
 add_library(${PROJECT_NAME}_plugin
   ${SOURCES}
@@ -140,6 +151,7 @@ target_link_libraries(
     -static-libgcc
     -static-libstdc++
 )
+
 
 install(
   DIRECTORY include/
