@@ -46,12 +46,13 @@
 #include <kdl_parser/kdl_parser.hpp>
 #include <moveit/kinematics_base/kinematics_base.h>
 #include <moveit/rdf_loader/rdf_loader.h>
+
 #include <pluginlib/class_list_macros.h>
 #include <srdfdom/model.h>
 #include <urdf/model.h>
 #include <urdf_model/model.h>
 
-#include <eigen_conversions/eigen_msg.h>
+
 #include <tf2_eigen/tf2_eigen.h>
 //#include <moveit/common_planning_interface_objects/common_objects.h>
 #include <moveit/kinematics_base/kinematics_base.h>

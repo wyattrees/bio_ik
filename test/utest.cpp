@@ -37,7 +37,7 @@
 #include <gtest/gtest.h>
 
 #include "../src/utils.h"
-#include "../src/frame.h"
+#include <bio_ik/frame.h>
 
 using namespace bio_ik;
 
