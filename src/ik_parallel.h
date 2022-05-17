@@ -95,9 +95,9 @@ struct IKParallel
     std::vector<std::vector<double>> solver_temps;
     std::vector<int> solver_success;
     std::vector<double> solver_fitness;
-    int thread_count;
+    size_t thread_count;
     // std::vector<RobotFK_Fast> fk; // TODO: remove
-    std::chrono::time_point<std::chrono::system_clock> timeout;
+    std::chrono::time_point<std::chrono::system_clock, std::chrono::duration<double>> timeout;
     bool success;
     std::atomic<int> finished;
     std::atomic<uint32_t> iteration_count;
