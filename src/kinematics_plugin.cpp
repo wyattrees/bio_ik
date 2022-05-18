@@ -110,7 +110,6 @@ namespace bio_ik_kinematics_plugin {
 struct BioIKKinematicsPlugin : kinematics::KinematicsBase {
   rclcpp::Node::SharedPtr node_;
   std::vector<std::string> joint_names, link_names;
-  moveit::core::RobotModelConstPtr robot_model;
   const moveit::core::JointModelGroup *joint_model_group;
   mutable std::unique_ptr<IKParallel> ik;
   mutable std::vector<double> state, temp;
@@ -174,7 +173,7 @@ struct BioIKKinematicsPlugin : kinematics::KinematicsBase {
 
     LOG("bio ik init", node_->getName());
 
-    joint_model_group = robot_model->getJointModelGroup(group_name);
+    joint_model_group = robot_model_->getJointModelGroup(group_name);
     if (!joint_model_group) {
       LOG("failed to get joint model group");
       return false;
@@ -197,7 +196,7 @@ struct BioIKKinematicsPlugin : kinematics::KinematicsBase {
 
     // bool enable_profiler;
     getRosParam("profiler", enable_profiler, false);
-    // if(enable_profiler) Profiler::start();
+    if(enable_profiler) Profiler::start();
 
     robot_info = RobotInfo(robot_model_);
 
@@ -222,7 +221,7 @@ struct BioIKKinematicsPlugin : kinematics::KinematicsBase {
     getRosParam("elite_count", ikparams.elite_count, 4);
     getRosParam("linear_fitness", ikparams.linear_fitness, false);
 
-    temp_state.reset(new moveit::core::RobotState(robot_model));
+    temp_state.reset(new moveit::core::RobotState(robot_model_));
 
     ik.reset(new IKParallel(ikparams));
 
@@ -385,19 +384,19 @@ struct BioIKKinematicsPlugin : kinematics::KinematicsBase {
     FNPROFILER();
 
     // get variable default positions / context state
-    state.resize(robot_model->getVariableCount());
+    state.resize(robot_model_->getVariableCount());
     if (context_state)
-      for (size_t i = 0; i < robot_model->getVariableCount(); i++)
+      for (size_t i = 0; i < robot_model_->getVariableCount(); i++)
         state[i] = context_state->getVariablePositions()[i];
     else
-      robot_model->getVariableDefaultPositions(state);
+      robot_model_->getVariableDefaultPositions(state);
 
     // overwrite used variables with seed state
     solution = ik_seed_state;
     {
       int i = 0;
       for (auto &joint_name : getJointNames()) {
-        auto *joint_model = robot_model->getJointModel(joint_name);
+        auto *joint_model = robot_model_->getJointModel(joint_name);
         if (!joint_model)
           continue;
         for (size_t vi = 0; vi < joint_model->getVariableCount(); vi++)
@@ -503,7 +502,7 @@ struct BioIKKinematicsPlugin : kinematics::KinematicsBase {
     for (auto ivar : problem.active_variables) {
       auto v = state[ivar];
       if (robot_info.isRevolute(ivar) &&
-          robot_model->getMimicJointModels().empty()) {
+          robot_model_->getMimicJointModels().empty()) {
         auto r = problem.initial_guess[ivar];
         auto lo = robot_info.getMin(ivar);
         auto hi = robot_info.getMax(ivar);
@@ -535,13 +534,13 @@ struct BioIKKinematicsPlugin : kinematics::KinematicsBase {
     }
 
     // wrap angles
-    robot_model->enforcePositionBounds(state.data());
+    robot_model_->enforcePositionBounds(state.data());
 
     // map result to jointgroup variables
     {
       solution.clear();
       for (auto &joint_name : getJointNames()) {
-        auto *joint_model = robot_model->getJointModel(joint_name);
+        auto *joint_model = robot_model_->getJointModel(joint_name);
         if (!joint_model)
           continue;
         for (size_t vi = 0; vi < joint_model->getVariableCount(); vi++)

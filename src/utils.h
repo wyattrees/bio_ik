@@ -91,7 +91,7 @@ template <class T, class... AA> inline void vprint(std::ostream& s, const T& a, 
 {
     s << a << " ";
     vprint(s, aa...);
-};
+}
 
 #define LOG2(...) vprint(LOG_STREAM, "ikbio ", __VA_ARGS__)
 

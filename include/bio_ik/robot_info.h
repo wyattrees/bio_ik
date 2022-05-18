@@ -79,7 +79,7 @@ public:
             bool bounded = bounds.position_bounded_;
 
             auto* joint_model = model->getJointOfVariable(variables.size());
-            if(auto* revolute = dynamic_cast<const moveit::core::RevoluteJointModel*>(joint_model))
+            if(dynamic_cast<const moveit::core::RevoluteJointModel*>(joint_model))
 
                 if(bounds.max_position_ - bounds.min_position_ >= 2 * M_PI * 0.9999) bounded = false;
 
