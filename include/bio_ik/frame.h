@@ -48,7 +48,7 @@ namespace bio_ik
 typedef tf2::Quaternion Quaternion;
 typedef tf2::Vector3 Vector3;
 
-struct Frame
+struct alignas(32) Frame
 {
     Vector3 pos;
     std::array<double, 4 - (sizeof(Vector3) / sizeof(double))> __padding;
