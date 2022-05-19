@@ -120,29 +120,30 @@ struct BioIKKinematicsPlugin : kinematics::KinematicsBase {
 
   BioIKKinematicsPlugin() { enable_profiler = false; }
 
-  virtual const std::vector<std::string> &getJointNames() const {
+  virtual const std::vector<std::string> &getJointNames() const override {
     LOG_FNC();
     return joint_names;
   }
 
-  virtual const std::vector<std::string> &getLinkNames() const {
+  virtual const std::vector<std::string> &getLinkNames() const override {
     LOG_FNC();
     return link_names;
   }
 
-  virtual bool getPositionFK(const std::vector<std::string> &link_names,
-                             const std::vector<double> &joint_angles,
-                             std::vector<geometry_msgs::msg::Pose> &poses) const {
+  virtual bool getPositionFK(
+    [[maybe_unused]] const std::vector<std::string> &,
+    [[maybe_unused]] const std::vector<double> &,
+    [[maybe_unused]] std::vector<geometry_msgs::msg::Pose> &) const override {
     LOG_FNC();
     return false;
   }
 
-  virtual bool getPositionIK(const geometry_msgs::msg::Pose &ik_pose,
-                             const std::vector<double> &ik_seed_state,
-                             std::vector<double> &solution,
-                             moveit_msgs::msg::MoveItErrorCodes &error_code,
-                             const kinematics::KinematicsQueryOptions &options =
-                                 kinematics::KinematicsQueryOptions()) const {
+  virtual bool getPositionIK(
+      [[maybe_unused]] const geometry_msgs::msg::Pose &,
+      [[maybe_unused]] const std::vector<double> &,
+      [[maybe_unused]] std::vector<double> &,
+      [[maybe_unused]] moveit_msgs::msg::MoveItErrorCodes &,
+      [[maybe_unused]] const kinematics::KinematicsQueryOptions &) const {
     LOG_FNC();
     return false;
   }
@@ -194,7 +195,6 @@ struct BioIKKinematicsPlugin : kinematics::KinematicsBase {
 
     link_names = tip_frames_;
 
-    // bool enable_profiler;
     getRosParam("profiler", enable_profiler, false);
     if(enable_profiler) Profiler::start();
 
@@ -216,9 +216,11 @@ struct BioIKKinematicsPlugin : kinematics::KinematicsBase {
     getRosParam("dtwist", ikparams.dtwist, 1e-5);
 
     // initialize parameters for ik_evolution_1
+    // TODO(wyattrees): update to "skip_wipeout"?
     getRosParam("no_wipeout", ikparams.opt_no_wipeout, false);
     getRosParam("population_size", ikparams.population_size, 8);
     getRosParam("elite_count", ikparams.elite_count, 4);
+    // TODO(wyattrees): update to "enable_linear_fitness"?
     getRosParam("linear_fitness", ikparams.linear_fitness, false);
 
     temp_state.reset(new moveit::core::RobotState(robot_model_));
@@ -307,7 +309,7 @@ struct BioIKKinematicsPlugin : kinematics::KinematicsBase {
                    std::vector<double> &solution,
                    moveit_msgs::msg::MoveItErrorCodes &error_code,
                    const kinematics::KinematicsQueryOptions &options =
-                       kinematics::KinematicsQueryOptions()) const {
+                       kinematics::KinematicsQueryOptions()) const override {
     LOG_FNC();
     return searchPositionIK(std::vector<geometry_msgs::msg::Pose>{ik_pose},
                             ik_seed_state, timeout, std::vector<double>(),
@@ -321,7 +323,7 @@ struct BioIKKinematicsPlugin : kinematics::KinematicsBase {
                    std::vector<double> &solution,
                    moveit_msgs::msg::MoveItErrorCodes &error_code,
                    const kinematics::KinematicsQueryOptions &options =
-                       kinematics::KinematicsQueryOptions()) const {
+                       kinematics::KinematicsQueryOptions()) const override {
     LOG_FNC();
     return searchPositionIK(std::vector<geometry_msgs::msg::Pose>{ik_pose},
                             ik_seed_state, timeout, consistency_limits,
@@ -335,7 +337,7 @@ struct BioIKKinematicsPlugin : kinematics::KinematicsBase {
                    const IKCallbackFn &solution_callback,
                    moveit_msgs::msg::MoveItErrorCodes &error_code,
                    const kinematics::KinematicsQueryOptions &options =
-                       kinematics::KinematicsQueryOptions()) const {
+                       kinematics::KinematicsQueryOptions()) const override {
     LOG_FNC();
     return searchPositionIK(std::vector<geometry_msgs::msg::Pose>{ik_pose},
                             ik_seed_state, timeout, std::vector<double>(),
@@ -350,7 +352,7 @@ struct BioIKKinematicsPlugin : kinematics::KinematicsBase {
                    const IKCallbackFn &solution_callback,
                    moveit_msgs::msg::MoveItErrorCodes &error_code,
                    const kinematics::KinematicsQueryOptions &options =
-                       kinematics::KinematicsQueryOptions()) const {
+                       kinematics::KinematicsQueryOptions()) const override {
     LOG_FNC();
     return searchPositionIK(std::vector<geometry_msgs::msg::Pose>{ik_pose},
                             ik_seed_state, timeout, consistency_limits,
@@ -371,8 +373,9 @@ struct BioIKKinematicsPlugin : kinematics::KinematicsBase {
                    moveit_msgs::msg::MoveItErrorCodes &error_code,
                    const kinematics::KinematicsQueryOptions &options =
                        kinematics::KinematicsQueryOptions(),
-                   const moveit::core::RobotState *context_state = NULL) const {
-    std::chrono::time_point<std::chrono::system_clock, std::chrono::duration<double>> t0 = std::chrono::system_clock::now();
+                   const moveit::core::RobotState *context_state = NULL) const override {
+    std::chrono::time_point<std::chrono::system_clock,
+                            std::chrono::duration<double>> t0 = std::chrono::system_clock::now();
 
     if (enable_profiler)
       Profiler::start();
@@ -460,7 +463,7 @@ struct BioIKKinematicsPlugin : kinematics::KinematicsBase {
 
       if (!bio_ik_options || !bio_ik_options->replace) {
         for (size_t i = 0; i < tip_frames_.size(); i++) {
-          auto *goal = (PoseGoal *)default_goals[i].get();
+          auto *goal = static_cast<PoseGoal *>(default_goals[i].get());
           goal->setPosition(tipFrames[i].pos);
           goal->setOrientation(tipFrames[i].rot);
         }
@@ -575,8 +578,9 @@ struct BioIKKinematicsPlugin : kinematics::KinematicsBase {
     }
   }
 
-  virtual bool supportsGroup(const moveit::core::JointModelGroup *jmg,
-                             std::string *error_text_out = 0) const {
+  virtual bool supportsGroup(
+      [[maybe_unused]] const moveit::core::JointModelGroup *jmg,
+      [[maybe_unused]] std::string *error_text_out = 0) const override {
     LOG_FNC();
     // LOG_VAR(jmg->getName());
     return true;

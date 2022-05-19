@@ -148,12 +148,12 @@ struct IKEvolution1 : IKBase
         return v[index];
     }
 
-    inline double clip(double v, size_t i) { return modelInfo.clip(v, i); }
+    inline double clip(double v, size_t i) { return modelInfo_.clip(v, i); }
 
     inline double getMutationStrength(size_t i, const Individual& parentA, const Individual& parentB)
     {
         double extinction = 0.5 * (parentA.extinction + parentB.extinction);
-        double span = modelInfo.getSpan(i);
+        double span = modelInfo_.getSpan(i);
         return span * extinction;
     }
 
@@ -174,14 +174,14 @@ struct IKEvolution1 : IKBase
 
         double heuristic_error = 0;
         // for(int tip_index = 0; tip_index < tipObjectives.size(); tip_index++)
-        for(int tip_index = 0; tip_index < problem.goals.size(); tip_index++)
+        for(int tip_index = 0; tip_index < problem_.goals.size(); tip_index++)
         {
             double influence = heuristicErrorTree.getInfluence(variable_index, tip_index);
             if(influence == 0) continue;
 
             // const auto& ta = tipObjectives[tip_index];
-            const auto& ta = problem.goals[tip_index].frame;
-            const auto& tb = model.getTipFrame(tip_index);
+            const auto& ta = problem_.goals[tip_index].frame;
+            const auto& tb = model_.getTipFrame(tip_index);
 
             double length = heuristicErrorTree.getJointVariableChainLength(tip_index, variable_index);
 
@@ -191,7 +191,7 @@ struct IKEvolution1 : IKBase
 
             // LOG_ALWAYS("b", length);
 
-            if(modelInfo.isPrismatic(variable_index))
+            if(modelInfo_.isPrismatic(variable_index))
             {
                 // heuristic_error += ta.pos.distance(tb.pos) * influence;
                 // if(length) heuristic_error += ta.rot.angle(tb.rot) * length * influence;
@@ -207,7 +207,7 @@ struct IKEvolution1 : IKBase
                 }
             }
 
-            if(modelInfo.isRevolute(variable_index))
+            if(modelInfo_.isRevolute(variable_index))
             {
                 // if(length) heuristic_error += ta.pos.distance(tb.pos) / length * influence;
                 // heuristic_error += ta.rot.angle(tb.rot) * influence;
@@ -239,11 +239,11 @@ struct IKEvolution1 : IKBase
     {
         FNPROFILER();
         // for(size_t i = 0; i < offspring.genes.size(); i++)
-        for(auto i : problem.active_variables)
+        for(auto i : problem_.active_variables)
         {
-            offspring.genes[i] = random(modelInfo.getMin(i), modelInfo.getMax(i));
+            offspring.genes[i] = random(modelInfo_.getMin(i), modelInfo_.getMax(i));
 
-            offspring.genes[i] = mix(offspring.genes[i], (modelInfo.getMin(i) + modelInfo.getMax(i)) * 0.5, random(0.0, 0.1));
+            offspring.genes[i] = mix(offspring.genes[i], (modelInfo_.getMin(i) + modelInfo_.getMax(i)) * 0.5, random(0.0, 0.1));
 
             offspring.gradients[i] = 0;
         }
@@ -254,14 +254,14 @@ struct IKEvolution1 : IKBase
     {
         if(linear_fitness)
         {
-            model.applyConfiguration(genes);
+            model_.applyConfiguration(genes);
             double fitness_sum = 0.0;
-            for(size_t goal_index = 0; goal_index < problem.goals.size(); goal_index++)
+            for(size_t goal_index = 0; goal_index < problem_.goals.size(); goal_index++)
             {
-                const auto& ta = problem.goals[goal_index].frame;
-                const auto& tb = model.getTipFrame(problem.goals[goal_index].tip_index);
+                const auto& ta = problem_.goals[goal_index].frame;
+                const auto& tb = model_.getTipFrame(problem_.goals[goal_index].tip_index);
 
-                double tdist = ta.pos.distance(tb.pos) / computeAngularScale(problem.goals[goal_index].tip_index, ta);
+                double tdist = ta.pos.distance(tb.pos) / computeAngularScale(problem_.goals[goal_index].tip_index, ta);
                 double rdist = ta.rot.angle(tb.rot);
 
                 fitness_sum += mix(tdist, rdist, (balanced || in_final_adjustment_loop) ? 0.5 : random());
@@ -279,15 +279,15 @@ struct IKEvolution1 : IKBase
         FNPROFILER();
         auto& genes = population[0].genes;
         // for(size_t i = 0; i < genes.size(); i++)
-        for(auto i : problem.active_variables)
+        for(auto i : problem_.active_variables)
         {
             double v0 = genes[i];
             double fitness = computeFitness(genes, true);
             double heuristicError = getHeuristicError(i, true);
             // double heuristicError = 0.001;
-            genes[i] = modelInfo.clip(v0 + random(0, heuristicError), i);
+            genes[i] = modelInfo_.clip(v0 + random(0, heuristicError), i);
             double incFitness = computeFitness(genes, true);
-            genes[i] = modelInfo.clip(v0 - random(0, heuristicError), i);
+            genes[i] = modelInfo_.clip(v0 - random(0, heuristicError), i);
             double decFitness = computeFitness(genes, true);
             genes[i] = v0;
             if(incFitness < fitness || decFitness < fitness)
@@ -392,7 +392,7 @@ struct IKEvolution1 : IKBase
 
         // model.incrementalBegin(individual.genes);
 
-        for(auto i : problem.active_variables)
+        for(auto i : problem_.active_variables)
         {
             double fitness = computeFitness(individual.genes, true);
 
@@ -444,7 +444,7 @@ struct IKEvolution1 : IKBase
 
     void init()
     {
-        initialGuess = problem.initial_guess;
+        initialGuess = problem_.initial_guess;
         solution = initialGuess;
 
         population.resize(populationSize);
@@ -476,8 +476,8 @@ struct IKEvolution1 : IKBase
 
         std::vector<std::string> tips;
         for(auto tip_link_index : problem.tip_link_indices)
-            tips.push_back(params.robot_model->getLinkModelNames()[tip_link_index]);
-        heuristicErrorTree = HeuristicErrorTree(params.robot_model, tips);
+            tips.push_back(params_.robot_model->getLinkModelNames()[tip_link_index]);
+        heuristicErrorTree = HeuristicErrorTree(params_.robot_model, tips);
 
         init();
     }
@@ -494,8 +494,8 @@ struct IKEvolution1 : IKBase
 
     const std::vector<Frame>& getSolutionTipFrames()
     {
-        model.applyConfiguration(solution);
-        return model.getTipFrames();
+        model_.applyConfiguration(solution);
+        return model_.getTipFrames();
     }
 
     bool evolve()

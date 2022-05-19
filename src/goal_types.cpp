@@ -55,7 +55,6 @@ void TouchGoal::describe(GoalContext& context) const
     }
     link_model = robot_model->getLinkModel(this->getLinkName());
     size_t link_index = link_model->getLinkIndex();
-    auto touch_goal_normal = normal.normalized();
     // auto fbrot = fb.rot.normalized();
     auto& collision_link = collision_model->collision_links[link_index];
     if(!collision_link.initialized)
@@ -115,25 +114,33 @@ void TouchGoal::describe(GoalContext& context) const
                 // auto* fcl = new fcl::Convex(s.plane_normals.data(), s.plane_dis.data(), s.plane_normals.size(), s.points.data(), s.points.size(), s.polygons.data());
 
                 // workaround for fcl::Convex initialization bug
-                auto* fcl = (fcl::Convex*)::operator new(sizeof(fcl::Convex));
-                fcl->num_points = s.points.size();
-                fcl = new(fcl) fcl::Convex(s.plane_normals.data(), s.plane_dis.data(), s.plane_normals.size(), s.points.data(), s.points.size(), s.polygons.data());
+                auto fcl = [&s]() -> fcl::Convex* {
+                    auto buffer = operator new(sizeof(fcl::Convex));
+                    static_cast<fcl::Convex*>(buffer)->num_points =
+                        static_cast<int>(s.points.size());
+                    return new (buffer) fcl::Convex(
+                        s.plane_normals.data(), s.plane_dis.data(),
+                        static_cast<int>(s.plane_normals.size()), s.points.data(),
+                        static_cast<int>(s.points.size()), s.polygons.data());
+                }();
 
-                s.geometry = decltype(s.geometry)(new collision_detection::FCLGeometry(fcl, link_model, shape_index));
+                s.geometry = decltype(s.geometry)(new collision_detection::FCLGeometry(fcl, link_model, static_cast<int>(shape_index)));
                 s.edges.resize(s.points.size());
                 std::vector<std::unordered_set<size_t>> edge_sets(s.points.size());
-                for(size_t edge_index = 0; edge_index < fcl->num_edges; edge_index++)
+                for(size_t edge_index = 0; edge_index < static_cast<size_t>(fcl->num_edges); edge_index++)
                 {
                     auto edge = fcl->edges[edge_index];
-                    if(edge_sets[edge.first].find(edge.second) == edge_sets[edge.first].end())
-                    {
-                        edge_sets[edge.first].insert(edge.second);
-                        s.edges[edge.first].push_back(edge.second);
+                    auto first_index = static_cast<size_t>(edge.first);
+                    auto second_index = static_cast<size_t>(edge.second);
+                    if (edge_sets[first_index].find(second_index) ==
+                        edge_sets[first_index].end()) {
+                        edge_sets[first_index].insert(second_index);
+                        s.edges[first_index].push_back(second_index);
                     }
-                    if(edge_sets[edge.second].find(edge.first) == edge_sets[edge.second].end())
-                    {
-                        edge_sets[edge.second].insert(edge.first);
-                        s.edges[edge.second].push_back(edge.first);
+                    if (edge_sets[second_index].find(first_index) ==
+                        edge_sets[second_index].end()) {
+                        edge_sets[second_index].insert(first_index);
+                        s.edges[second_index].push_back(first_index);
                     }
                 }
                 for(auto& p : s.points)
@@ -141,11 +148,11 @@ void TouchGoal::describe(GoalContext& context) const
             }
             else
             {
-                s.geometry = collision_detection::createCollisionGeometry(link_model->getShapes()[shape_index], link_model, shape_index);
+                s.geometry = collision_detection::createCollisionGeometry(
+                    link_model->getShapes()[shape_index], link_model,
+                    static_cast<int>(shape_index));
             }
-            // LOG("b");
         }
-        // getchar();
     }
 }
 
@@ -166,7 +173,7 @@ double TouchGoal::evaluate(const GoalContext& context) const
         {
             auto& s = collision_link.shapes[shape_index];
             double d = DBL_MAX;
-            auto goal_normal = normal;
+            auto goal_normal = normal_;
             quat_mul_vec(fb.rot.inverse(), goal_normal, goal_normal);
             quat_mul_vec(s->frame.rot.inverse(), goal_normal, goal_normal);
             /*{
@@ -206,7 +213,7 @@ double TouchGoal::evaluate(const GoalContext& context) const
                 d = vertex_dot_normal;
                 last_collision_vertex = vertex_index;
             }
-            d -= normal.dot(position - fb.pos);
+            d -= normal_.dot(position_ - fb.pos);
             // ROS_INFO("touch goal");
             if(d < dmin) dmin = d;
         }
@@ -216,7 +223,7 @@ double TouchGoal::evaluate(const GoalContext& context) const
             static fcl::Sphere shape1(offset);
             fcl::DistanceRequest request;
             fcl::DistanceResult result;
-            auto pos1 = position - normal * offset * 2;
+            auto pos1 = position_ - normal_ * offset * 2;
             auto* shape2 = collision_link.shapes[shape_index]->geometry->collision_geometry_.get();
             auto frame2 = Frame(fb.pos, fb.rot.normalized()) * collision_link.shapes[shape_index]->frame;
             double d = fcl::distance(&shape1, fcl::Transform3f(fcl::Vec3f(pos1.x(), pos1.y(), pos1.z())), shape2, fcl::Transform3f(fcl::Quaternion3f(frame2.rot.w(), frame2.rot.x(), frame2.rot.y(), frame2.rot.z()), fcl::Vec3f(frame2.pos.x(), frame2.pos.y(), frame2.pos.z())), request, result);

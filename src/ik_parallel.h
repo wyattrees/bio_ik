@@ -124,7 +124,7 @@ struct IKParallel
         while(solvers.size() < thread_count)
             solvers.emplace_back(IKFactory::clone(solvers.front().get()));
         for(size_t i = 0; i < thread_count; i++)
-            solvers[i]->thread_index = i;
+            solvers[i]->thread_index_ = i;
 
         // while(fk.size() < thread_count) fk.emplace_back(params.robot_model);
 
@@ -172,7 +172,7 @@ private:
             // get solution and check stop criterion
             auto& result = solver_temps[i];
             result = solvers[i]->getSolution();
-            auto& fk = solvers[i]->model;
+            auto& fk = solvers[i]->model_;
             fk.applyConfiguration(result);
             bool success = solvers[i]->checkSolution(result, fk.getTipFrames());
             if(success) finished = 1;
@@ -186,7 +186,7 @@ private:
         finished = 1;
 
         for(auto& s : solvers)
-            s->canceled = true;
+            s->canceled_ = true;
     }
 
 public:
@@ -209,7 +209,7 @@ public:
         for(auto& f : solver_fitness)
             f = DBL_MAX;
         for(auto& s : solvers)
-            s->canceled = false;
+            s->canceled_ = false;
 
         // run solvers
         {
@@ -226,7 +226,7 @@ public:
             if(solver_success[i])
             {
                 double fitness;
-                if(solvers[0]->problem.secondary_goals.empty())
+                if(solvers[0]->problem_.secondary_goals.empty())
                 {
                     // ... and if no secondary goals have been specified,
                     // select the best result according to primary goals

@@ -322,7 +322,7 @@ __attribute__((always_inline)) inline double clamp2(double v, double lo, double 
     return v;
 }
 
-__attribute__((always_inline)) inline double smoothstep(float a, float b, float v)
+__attribute__((always_inline)) inline double smoothstep(double a, double b, double v)
 {
     v = clamp((v - a) / (b - a), 0.0, 1.0);
     return v * v * (3.0 - 2.0 * v);
@@ -410,7 +410,7 @@ public:
     template <class DERIVED> struct Class : ClassBase
     {
         BASE* create(ARGS... args) const { return new DERIVED(args...); }
-        BASE* clone(const BASE* o) const { return new DERIVED(*(const DERIVED*)o); }
+        BASE* clone(const BASE* o) const { return new DERIVED(*dynamic_cast<const DERIVED*>(o)); }
         Class(const std::string& name)
         {
             this->name = name;
@@ -428,7 +428,7 @@ public:
     template <class DERIVED> static DERIVED* clone(const DERIVED* o)
     {
         for(auto* f : classes())
-            if(f->type == typeid(*o)) return (DERIVED*)f->clone(o);
+            if(f->type == typeid(*o)) return dynamic_cast<DERIVED*>(f->clone(o));
         ERROR("class not found", typeid(*o).name());
     }
 };
@@ -443,13 +443,13 @@ template <class T, size_t A> struct aligned_allocator : public std::allocator<T>
     typedef T& reference;
     typedef const T& const_reference;
     typedef T value_type;
-    T* allocate(size_t s, const void* hint = 0)
+    T* allocate(size_t s, [[maybe_unused]] const void* hint = 0)
     {
         void* p;
         if(posix_memalign(&p, A, sizeof(T) * s + 64)) throw std::bad_alloc();
-        return (T*)p;
+        return static_cast<T*>(p);
     }
-    void deallocate(T* ptr, size_t s) { free(ptr); }
+    void deallocate(T* ptr, [[maybe_unused]] size_t s) { free(ptr); }
     template <class U> struct rebind
     {
         typedef aligned_allocator<U, A> other;
