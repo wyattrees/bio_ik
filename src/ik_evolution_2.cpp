@@ -241,6 +241,7 @@ template <int memetic> struct IKEvolution2 : IKBase
 #pragma GCC optimize ("unroll-loops")
     // create offspring and mutate
     __attribute__((hot)) __attribute__((noinline))
+    __attribute__((optimize("unroll-loops")))
     //__attribute__((target_clones("avx2", "avx", "sse2", "default")))
     //__attribute__((target("avx")))
     void
@@ -281,7 +282,10 @@ template <int memetic> struct IKEvolution2 : IKBase
             auto __attribute__((aligned(32)))* __restrict__ child_gradients = child.gradients.data();
 
 #pragma omp simd aligned(genes_span : 32), aligned(genes_min : 32), aligned(genes_max : 32), aligned(parent_genes : 32), aligned(parent_gradients : 32), aligned(parent2_genes : 32), aligned(parent2_gradients : 32), aligned(child_genes : 32), aligned(child_gradients : 32) aligned(rr : 32)
+<<<<<<< HEAD
 
+=======
+>>>>>>> ros2
             for(size_t gene_index = 0; gene_index < gene_count; gene_index++)
             {
                 // double mutation_rate = (1 << fast_random_index(16)) * (1.0 / (1 << 23));
@@ -391,7 +395,6 @@ template <int memetic> struct IKEvolution2 : IKBase
                     // genotype-phenotype mapping
                     {
                         BLOCKPROFILER("phenotype");
-                        // size_t gene_count = children[0].genes.size();
                         genotypes.resize(child_count);
                         for(size_t i = 0; i < child_count; i++)
                             genotypes[i] = children[i].genes.data();
@@ -465,11 +468,6 @@ template <int memetic> struct IKEvolution2 : IKBase
                         double fa = f2p + computeSecondaryFitnessActiveVariables(genotypes[0]);
                         for(size_t i = 0; i < problem_.active_variables.size(); i++)
                         {
-                            // double* pp = &(genotypes[0][i]);
-                            genotypes[0][i] = individual.genes[i] + dp;
-                            model_.computeApproximateMutation1(problem_.active_variables[i], +dp, phenotypes2[0], phenotypes3[0]);
-                            double fb = computeCombinedFitnessActiveVariables(phenotypes3[0], genotypes[0]);
-                            genotypes[0][i] = individual.genes[i];
                             double d = fb - fa;
                             gradient[i] = d;
                         }

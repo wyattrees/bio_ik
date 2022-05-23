@@ -127,7 +127,7 @@ void TouchGoal::describe(GoalContext& context) const
                 s.geometry = decltype(s.geometry)(new collision_detection::FCLGeometry(fcl, link_model, static_cast<int>(shape_index)));
                 s.edges.resize(s.points.size());
                 std::vector<std::unordered_set<size_t>> edge_sets(s.points.size());
-                for(size_t edge_index = 0; edge_index < static_cast<size_t>(fcl->num_edges); edge_index++)
+                for(int edge_index = 0; edge_index < fcl->num_edges; edge_index++)
                 {
                     auto edge = fcl->edges[edge_index];
                     auto first_index = static_cast<size_t>(edge.first);

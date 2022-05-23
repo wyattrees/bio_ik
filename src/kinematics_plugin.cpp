@@ -367,7 +367,7 @@ struct BioIKKinematicsPlugin : kinematics::KinematicsBase {
   virtual bool
   searchPositionIK(const std::vector<geometry_msgs::msg::Pose> &ik_poses,
                    const std::vector<double> &ik_seed_state, double timeout,
-                   const std::vector<double> &consistency_limits,
+                   [[maybe_unused]] const std::vector<double> &consistency_limits,
                    std::vector<double> &solution,
                    const IKCallbackFn &solution_callback,
                    moveit_msgs::msg::MoveItErrorCodes &error_code,
@@ -593,4 +593,4 @@ struct BioIKKinematicsPlugin : kinematics::KinematicsBase {
 #undef LOG
 #undef ERROR
 PLUGINLIB_EXPORT_CLASS(bio_ik_kinematics_plugin::BioIKKinematicsPlugin,
-                       kinematics::KinematicsBase);
+                       kinematics::KinematicsBase)

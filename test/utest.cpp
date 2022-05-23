@@ -35,6 +35,7 @@
 // BioIK unit tests
 
 #include <gtest/gtest.h>
+#include <random>
 
 #include "../src/utils.h"
 #include <bio_ik/frame.h>

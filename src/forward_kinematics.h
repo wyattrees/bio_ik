@@ -1497,7 +1497,7 @@ public:
         for(size_t i = 0; i < tipFrames.size(); i++)
             tipFrames[i] = Frame(robot_state.getGlobalLinkTransform(tipLinks[i]));
     }
-    inline void incrementalBegin(const std::vector<double>& /* unused */) {}
+    inline void incrementalBegin([[maybe_unused]] const std::vector<double>& jj) {}
     inline void incrementalEnd() {}
     const Frame& getTipFrame(size_t fi) const { return tipFrames[fi]; }
     const std::vector<Frame>& getTipFrames() const { return tipFrames; }

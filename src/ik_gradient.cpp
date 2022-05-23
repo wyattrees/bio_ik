@@ -109,7 +109,6 @@ template <class BASE> struct IKJacobianBase : BASE
                     jacobian(itip * 6 + 4, icol) *= rotational_scale;
                     jacobian(itip * 6 + 5, icol) *= rotational_scale;
                 }
-                icol++;
             }
         }
 

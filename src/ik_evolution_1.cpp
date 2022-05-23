@@ -168,13 +168,13 @@ struct IKEvolution1 : IKBase
         return angular_scale;*/
     }
 
-    double getHeuristicError(size_t variable_index, bool balanced)
+    double getHeuristicError(size_t variable_index, [[maybe_unused]] bool balanced)
     {
         // return 1;
 
         double heuristic_error = 0;
         // for(int tip_index = 0; tip_index < tipObjectives.size(); tip_index++)
-        for(int tip_index = 0; tip_index < problem_.goals.size(); tip_index++)
+        for(size_t tip_index = 0; tip_index < problem_.goals.size(); tip_index++)
         {
             double influence = heuristicErrorTree.getInfluence(variable_index, tip_index);
             if(influence == 0) continue;
@@ -304,7 +304,7 @@ struct IKEvolution1 : IKBase
     {
         double min = population.front().fitness;
         double max = population.back().fitness;
-        for(size_t i = 0; i < populationSize; i++)
+        for(int i = 0; i < populationSize; i++)
         {
             double grading = (double)i / (double)(populationSize - 1);
             population[i].extinction = (population[i].fitness + min * (grading - 1)) / max;
@@ -505,7 +505,7 @@ struct IKEvolution1 : IKBase
         auto& offspring = tempOffspring;
         offspring = population;
 
-        for(size_t i = 0; i < eliteCount; i++)
+        for(int i = 0; i < eliteCount; i++)
         {
             offspring[i] = population[i];
             exploit(offspring[i]);
@@ -515,7 +515,7 @@ struct IKEvolution1 : IKBase
         pool.resize(populationSize);
         iota(pool.begin(), pool.end(), &population[0]);
 
-        for(size_t i = eliteCount; i < populationSize; i++)
+        for(int i = eliteCount; i < populationSize; i++)
         {
             if(pool.size() > 0)
             {
