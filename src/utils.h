@@ -337,8 +337,8 @@ __attribute__((always_inline)) inline double sign(double f)
 
 template <class t> class linear_int_distribution
 {
-    std::uniform_int_distribution<t> base;
     t n;
+    std::uniform_int_distribution<t> base;
 
 public:
     inline linear_int_distribution(t vrange)
@@ -443,13 +443,13 @@ template <class T, size_t A> struct aligned_allocator : public std::allocator<T>
     typedef T& reference;
     typedef const T& const_reference;
     typedef T value_type;
-    T* allocate(size_t s, const void* hint = 0)
+    T* allocate(size_t s, [[maybe_unused]] const void* hint = 0)
     {
         void* p;
         if(posix_memalign(&p, A, sizeof(T) * s + 64)) throw std::bad_alloc();
         return (T*)p;
     }
-    void deallocate(T* ptr, size_t s) { free(ptr); }
+    void deallocate(T* ptr, size_t /*unused*/) { free(ptr); }
     template <class U> struct rebind
     {
         typedef aligned_allocator<U, A> other;

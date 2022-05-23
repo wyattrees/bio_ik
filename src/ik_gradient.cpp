@@ -71,7 +71,7 @@ template <class BASE> struct IKJacobianBase : BASE
     {
         FNPROFILER();
 
-        int tip_count = problem.tip_link_indices.size();
+        size_t tip_count = problem.tip_link_indices.size();
         tip_diffs.resize(tip_count * 6);
         joint_diffs.resize(problem.active_variables.size());
 
@@ -83,7 +83,7 @@ template <class BASE> struct IKJacobianBase : BASE
 
         // compute goal diffs
         tip_frames_temp = model.getTipFrames();
-        for(int itip = 0; itip < tip_count; itip++)
+        for(size_t itip = 0; itip < tip_count; itip++)
         {
             auto twist = frameTwist(tip_frames_temp[itip], tipObjectives[itip]);
             tip_diffs(itip * 6 + 0) = twist.vel.x() * translational_scale;
@@ -97,8 +97,7 @@ template <class BASE> struct IKJacobianBase : BASE
         // compute jacobian
         {
             model.computeJacobian(problem.active_variables, jacobian);
-            int icol = 0;
-            for(auto ivar : problem.active_variables)
+            for (size_t icol = 0; icol < problem.active_variables.size(); icol++)
             {
                 for(size_t itip = 0; itip < tip_count; itip++)
                 {
@@ -109,7 +108,6 @@ template <class BASE> struct IKJacobianBase : BASE
                     jacobian(itip * 6 + 4, icol) *= rotational_scale;
                     jacobian(itip * 6 + 5, icol) *= rotational_scale;
                 }
-                icol++;
             }
         }
 

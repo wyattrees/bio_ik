@@ -42,10 +42,10 @@ namespace bio_ik
 // executes a function in parallel on pre-allocated threads
 class ParallelExecutor
 {
-    std::function<void(size_t)> fun;
-    std::vector<std::thread> threads;
-    boost::barrier barrier;
     volatile bool exit;
+    std::vector<std::thread> threads;
+    std::function<void(size_t)> fun;
+    boost::barrier barrier;
     double best_fitness;
 
 public:

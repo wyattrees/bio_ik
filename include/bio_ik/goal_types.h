@@ -130,8 +130,8 @@ class PoseGoal : public LinkGoalBase
 
 public:
     PoseGoal()
-        : rotation_scale_(0.5)
-        , frame_(Frame::identity())
+        : frame_(Frame::identity())
+        , rotation_scale_(0.5)
     {
     }
     PoseGoal(const std::string& link_name, const tf2::Vector3& position, const tf2::Quaternion& orientation, double weight = 1.0)
