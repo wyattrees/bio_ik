@@ -55,7 +55,7 @@ void TouchGoal::describe(GoalContext& context) const
     }
     link_model = robot_model->getLinkModel(this->getLinkName());
     size_t link_index = link_model->getLinkIndex();
-    auto touch_goal_normal = normal.normalized();
+
     // auto fbrot = fb.rot.normalized();
     auto& collision_link = collision_model->collision_links[link_index];
     if(!collision_link.initialized)
@@ -122,7 +122,7 @@ void TouchGoal::describe(GoalContext& context) const
                 s.geometry = decltype(s.geometry)(new collision_detection::FCLGeometry(fcl, link_model, shape_index));
                 s.edges.resize(s.points.size());
                 std::vector<std::unordered_set<size_t>> edge_sets(s.points.size());
-                for(size_t edge_index = 0; edge_index < fcl->num_edges; edge_index++)
+                for(int edge_index = 0; edge_index < fcl->num_edges; edge_index++)
                 {
                     auto edge = fcl->edges[edge_index];
                     if(edge_sets[edge.first].find(edge.second) == edge_sets[edge.first].end())
