@@ -118,6 +118,33 @@ or used interactively from rviz using the MotionPlanning GUI plugin.
     kinematics_solver_attempts: 1
   ```
 
+  To use a solver class besides the default `bio2_memetic`, the ROS param `mode` must be set to one
+  of the options [below](#disabling-global-optimization) (e.g. 'gd_c'). To do so for the Quickstart
+  in Rviz tutorial, edit the rviz node within `<colcon workspace>/src/moveit2_tutorials/doc/tutorials/quickstart_in_rviz/launch/demo.launch.py` as such:
+
+  ```python
+  rviz_node_tutorial = Node(
+    package="rviz2",
+    executable="rviz2",
+    name="rviz2",
+    output="log",
+    arguments=["-d", rviz_empty_config],
+    parameters=[
+        robot_description,
+        robot_description_semantic,
+        ompl_planning_pipeline_config,
+        kinematics_yaml,
+        {"mode": "gd_c"} # use gd_c solver instead of default "bio2_memetic"
+    ],
+    condition=IfCondition(tutorial_mode),
+  )
+  ```
+
+  Once you make this change, remember to rebuild your workspace.
+
+  After enabling the Motion Planning Plugin in Rviz, check the "Approx IK Solutions" box before attempting to move the arm.
+
+
 * You are now ready to use bio_ik from your C/C++ and Python programs,
   using the standard Moveit API.
   To explicitly request an IK solution in C++:
