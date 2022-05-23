@@ -181,4 +181,17 @@ ament_export_targets(
   export_${PROJECT_NAME}
 )
 
+if(BUILD_TESTING)
+  find_package(ament_cmake_gtest REQUIRED)
+
+  ament_add_gtest(bio_ik_test test/utest.cpp)
+  target_link_libraries(bio_ik_test
+    bio_ik
+  )
+  target_include_directories(bio_ik_test
+    PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    PUBLIC $<INSTALL_INTERFACE:include>)
+  
+endif()
+
 ament_package()
