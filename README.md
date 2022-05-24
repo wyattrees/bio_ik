@@ -148,7 +148,8 @@ or used interactively from rviz using the MotionPlanning GUI plugin.
 * You are now ready to use bio_ik from your C/C++ and Python programs,
   using the standard Moveit API.
   To explicitly request an IK solution in C++:
-  ```
+
+  ```c++
     robot_model_loader::RobotModelLoader robot_model_loader(robot);
 
     auto robot_model = robot_model_loader.getModel();
@@ -160,15 +161,16 @@ or used interactively from rviz using the MotionPlanning GUI plugin.
 
     robot_state::RobotState robot_state_ik(robot_model);
 
-    // traditional "basic" bio_ik usage. The end-effector goal poses
-    // and end-effector link names are passed into the setFromIK()
-    // call. The KinematicsQueryOptions are empty.
-    //
+    const geometry_msgs::msg::Pose pose;
+    // TODO: set a pose you'd like get an IK solution for
+
+    // Several overloads for setFromIK are available
+    // here, we plass the joint model group, desired pose, and a timeout.
+    // We can leave the callback and options empty.
     bool ok = robot_state_ik.setFromIK(
                 joint_model_group, // joints to be used for IK
-                tip_transforms,    // multiple end-effector goal poses
-                tip_names,         // names of the end-effector links
-                attempts, timeout, // solver attempts and timeout
+                pose,    // multiple end-effector goal poses
+                timeout, // solver attempts and timeout
                 moveit::core::GroupStateValidityCallbackFn(),
                 opts               // mostly empty
               );
