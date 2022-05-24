@@ -35,11 +35,10 @@
 
 #include <bio_ik/ik_base.hpp>  // for IKSolver
 
-namespace bio_ik {
+namespace bio_ik
+{
+std::optional<std::unique_ptr<IKSolver>> makeEvolution1Solver(const IKParams& params);
 
-std::optional<std::unique_ptr<IKSolver>> makeEvolution1Solver(
-    const IKParams& params);
-
-const auto getEvolution1Modes = []() { return std::set<std::string>{"bio1"}; };
+const auto getEvolution1Modes = []() { return std::set<std::string>{ "bio1" }; };
 
 }  // namespace bio_ik

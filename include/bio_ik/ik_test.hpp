@@ -35,10 +35,10 @@
 
 #include <bio_ik/ik_base.hpp>  // for IKSolver
 
-namespace bio_ik {
-
+namespace bio_ik
+{
 std::optional<std::unique_ptr<IKSolver>> makeTestSolver(const IKParams& params);
 
-const auto getTestModes = []() { return std::set<std::string>{"test"}; };
+const auto getTestModes = []() { return std::set<std::string>{ "test" }; };
 
 }  // namespace bio_ik

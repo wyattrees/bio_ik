@@ -44,5 +44,4 @@
 
 namespace bio_ik
 {
-
 }
