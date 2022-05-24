@@ -59,8 +59,8 @@ struct IKParams
     // IKParallel parameters
     std::string solver_class_name;
     bool enable_counter;
-    int thread_count;
-    int random_seed;
+    size_t thread_count;
+    uint64_t random_seed;
 
     //Problem parameters
     double dpos;
@@ -69,8 +69,8 @@ struct IKParams
 
     // ik_evolution_1 parameters
     bool opt_no_wipeout;
-    int population_size;
-    int elite_count;
+    size_t population_size;
+    size_t elite_count;
     bool linear_fitness;
 };
 
@@ -322,7 +322,7 @@ __attribute__((always_inline)) inline double clamp2(double v, double lo, double 
     return v;
 }
 
-__attribute__((always_inline)) inline double smoothstep(float a, float b, float v)
+__attribute__((always_inline)) inline double smoothstep(double a, double b, double v)
 {
     v = clamp((v - a) / (b - a), 0.0, 1.0);
     return v * v * (3.0 - 2.0 * v);
@@ -374,65 +374,6 @@ public:
     }
 };
 
-// class factory
-//
-// registering a class:
-//   static Factory<Base>::Class<Derived> reg("Derived");
-//
-// instantiation:
-//   Base* obj = Factory<Base>::create("Derived");
-//
-// cloning and object:
-//   p = Factory<Base>::clone(o);
-//
-template <class BASE, class... ARGS> class Factory
-{
-    typedef BASE* (*Constructor)(ARGS...);
-    struct ClassBase
-    {
-        std::string name;
-        std::type_index type;
-        virtual BASE* create(ARGS... args) const = 0;
-        virtual BASE* clone(const BASE*) const = 0;
-        ClassBase()
-            : type(typeid(void))
-        {
-        }
-    };
-    typedef std::set<ClassBase*> MapType;
-    static MapType& classes()
-    {
-        static MapType ff;
-        return ff;
-    }
-
-public:
-    template <class DERIVED> struct Class : ClassBase
-    {
-        BASE* create(ARGS... args) const { return new DERIVED(args...); }
-        BASE* clone(const BASE* o) const { return new DERIVED(*(const DERIVED*)o); }
-        Class(const std::string& name)
-        {
-            this->name = name;
-            this->type = typeid(DERIVED);
-            classes().insert(this);
-        }
-        ~Class() { classes().erase(this); }
-    };
-    static BASE* create(const std::string& name, ARGS... args)
-    {
-        for(auto* f : classes())
-            if(f->name == name) return f->create(args...);
-        ERROR("class not found", name);
-    }
-    template <class DERIVED> static DERIVED* clone(const DERIVED* o)
-    {
-        for(auto* f : classes())
-            if(f->type == typeid(*o)) return (DERIVED*)f->clone(o);
-        ERROR("class not found", typeid(*o).name());
-    }
-};
-
 // Alloctes memory properly aligned for SIMD operations
 template <class T, size_t A> struct aligned_allocator : public std::allocator<T>
 {
@@ -447,7 +388,7 @@ template <class T, size_t A> struct aligned_allocator : public std::allocator<T>
     {
         void* p;
         if(posix_memalign(&p, A, sizeof(T) * s + 64)) throw std::bad_alloc();
-        return (T*)p;
+        return static_cast<T*>(p);
     }
     void deallocate(T* ptr, size_t /*unused*/) { free(ptr); }
     template <class U> struct rebind

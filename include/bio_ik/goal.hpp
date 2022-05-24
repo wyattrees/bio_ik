@@ -34,7 +34,7 @@
 
 #pragma once
 
-#include "frame.h"
+#include <bio_ik/frame.hpp>
 
 #include <moveit/kinematics_base/kinematics_base.h>
 
@@ -71,9 +71,9 @@ public:
     {
         auto j = goal_variable_indices_[i];
         if(j >= 0)
-            return active_variable_positions_[j];
+            return active_variable_positions_[static_cast<size_t>(j)];
         else
-            return initial_guess_[-1 - j];
+            return initial_guess_[static_cast<size_t>(-1 - j)];
     }
     inline const Frame& getProblemLinkFrame(size_t i) const { return tip_link_frames_[i]; }
     inline size_t getProblemLinkCount() const { return problem_tip_link_indices_.size(); }
