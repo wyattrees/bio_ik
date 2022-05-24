@@ -411,9 +411,9 @@ public:
     {
         BASE* create(ARGS... args) const { return new DERIVED(args...); }
         BASE* clone(const BASE* o) const { return new DERIVED(*dynamic_cast<const DERIVED*>(o)); }
-        Class(const std::string& name)
+        Class(const std::string& n)
         {
-            this->name = name;
+            this->name = n;
             this->type = typeid(DERIVED);
             classes().insert(this);
         }

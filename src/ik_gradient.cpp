@@ -71,9 +71,9 @@ template <class BASE> struct IKJacobianBase : BASE
     {
         FNPROFILER();
 
-        int tip_count = problem_.tip_link_indices.size();
+        int tip_count = static_cast<int>(problem_.tip_link_indices.size());
         tip_diffs.resize(tip_count * 6);
-        joint_diffs.resize(problem_.active_variables.size());
+        joint_diffs.resize(static_cast<Eigen::Index>(problem_.active_variables.size()));
 
         // compute fk
         model_.applyConfiguration(solution);

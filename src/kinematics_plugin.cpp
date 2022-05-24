@@ -195,7 +195,7 @@ struct BioIKKinematicsPlugin : kinematics::KinematicsBase {
 
     link_names = tip_frames_;
 
-    getRosParam("profiler", enable_profiler, false);
+    getRosParam<bool>("profiler", enable_profiler, false);
     if(enable_profiler) Profiler::start();
 
     robot_info = RobotInfo(robot_model_);
@@ -204,24 +204,22 @@ struct BioIKKinematicsPlugin : kinematics::KinematicsBase {
     ikparams.joint_model_group = joint_model_group;
 
     // initialize parameters for IKParallel
-    getRosParam("mode", ikparams.solver_class_name,
-                std::string("bio2_memetic"));
-    getRosParam("counter", ikparams.enable_counter, false);
-    getRosParam("threads", ikparams.thread_count, 0);
-    getRosParam("random_seed", ikparams.random_seed, static_cast<int>(std::random_device()()));
+    getRosParam<std::string>("mode", ikparams.solver_class_name, std::string("bio2_memetic"));
+    getRosParam<bool>("counter", ikparams.enable_counter, false);
+    getRosParam<int>("threads", ikparams.thread_count, 0);
+    getRosParam<int>("random_seed", ikparams.random_seed, static_cast<int>(std::random_device()()));
 
     // initialize parameters for Problem
-    getRosParam("dpos", ikparams.dpos, DBL_MAX);
-    getRosParam("drot", ikparams.drot, DBL_MAX);
-    getRosParam("dtwist", ikparams.dtwist, 1e-5);
+    getRosParam<double>("dpos", ikparams.dpos, DBL_MAX);
+    getRosParam<double>("drot", ikparams.drot, DBL_MAX);
+    getRosParam<double>("dtwist", ikparams.dtwist, 1e-5);
 
     // initialize parameters for ik_evolution_1
-    // TODO(wyattrees): update to "skip_wipeout"?
-    getRosParam("no_wipeout", ikparams.opt_no_wipeout, false);
-    getRosParam("population_size", ikparams.population_size, 8);
-    getRosParam("elite_count", ikparams.elite_count, 4);
+    getRosParam<bool>("no_wipeout", ikparams.opt_no_wipeout, false);
+    getRosParam<int>("population_size", ikparams.population_size, 8);
+    getRosParam<int>("elite_count", ikparams.elite_count, 4);
     // TODO(wyattrees): update to "enable_linear_fitness"?
-    getRosParam("linear_fitness", ikparams.linear_fitness, false);
+    getRosParam<bool>("linear_fitness", ikparams.linear_fitness, false);
 
     temp_state.reset(new moveit::core::RobotState(robot_model_));
 

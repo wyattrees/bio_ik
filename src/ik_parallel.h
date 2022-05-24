@@ -54,7 +54,7 @@ public:
         : exit(false)
         , threads(thread_count)
         , fun(f)
-        , barrier(thread_count)
+        , barrier(static_cast<unsigned int>(thread_count)) 
     {
         for(size_t i = 1; i < thread_count; i++)
         {
