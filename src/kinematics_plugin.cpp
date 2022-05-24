@@ -32,13 +32,13 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  *********************************************************************/
 
-#include <bio_ik/goal.h>
+#include <bio_ik/goal.hpp>
 
-#include "forward_kinematics.h"
-#include "ik_base.h"
-#include "ik_parallel.h"
-#include "problem.h"
-#include "utils.h"
+#include <bio_ik/forward_kinematics.hpp>
+#include <bio_ik/ik_base.hpp>
+#include <bio_ik/ik_parallel.hpp>
+#include <bio_ik/problem.hpp>
+#include <bio_ik/utils.hpp>
 
 #include <Eigen/Core>
 #include <Eigen/Dense>
@@ -65,7 +65,7 @@
 #include <tuple>
 #include <type_traits>
 
-#include <bio_ik/goal_types.h>
+#include <bio_ik/goal_types.hpp>
 
 using namespace bio_ik;
 
@@ -96,7 +96,7 @@ bool isBioIKKinematicsQueryOptions(const void *ptr) {
 const BioIKKinematicsQueryOptions *
 toBioIKKinematicsQueryOptions(const void *ptr) {
   if (isBioIKKinematicsQueryOptions(ptr))
-    return (const BioIKKinematicsQueryOptions *)ptr;
+    return static_cast<const BioIKKinematicsQueryOptions *>(ptr);
   else
     return 0;
 }
@@ -163,7 +163,7 @@ struct BioIKKinematicsPlugin : kinematics::KinematicsBase {
   {
     if (!node_->has_parameter(param))
     {
-      val = node_->declare_parameter(param, rclcpp::ParameterValue{default_val}).get<T>();
+      val = node_->declare_parameter(param, rclcpp::ParameterValue(default_val)).get<T>();
       return;
     }
     val = node_->get_parameter(param).get_value<T>();
@@ -208,7 +208,6 @@ struct BioIKKinematicsPlugin : kinematics::KinematicsBase {
     getRosParam<bool>("counter", ikparams.enable_counter, false);
     getRosParam<int>("threads", ikparams.thread_count, 0);
     getRosParam<int>("random_seed", ikparams.random_seed, static_cast<int>(std::random_device()()));
-
     // initialize parameters for Problem
     getRosParam<double>("dpos", ikparams.dpos, DBL_MAX);
     getRosParam<double>("drot", ikparams.drot, DBL_MAX);
@@ -395,13 +394,13 @@ struct BioIKKinematicsPlugin : kinematics::KinematicsBase {
     // overwrite used variables with seed state
     solution = ik_seed_state;
     {
-      int i = 0;
+      size_t i = 0;
       for (auto &joint_name : getJointNames()) {
         auto *joint_model = robot_model_->getJointModel(joint_name);
         if (!joint_model)
           continue;
         for (size_t vi = 0; vi < joint_model->getVariableCount(); vi++)
-          state.at(joint_model->getFirstVariableIndex() + vi) =
+          state.at(static_cast<size_t>(joint_model->getFirstVariableIndex()) + vi) =
               solution.at(i++);
       }
     }
@@ -546,7 +545,7 @@ struct BioIKKinematicsPlugin : kinematics::KinematicsBase {
           continue;
         for (size_t vi = 0; vi < joint_model->getVariableCount(); vi++)
           solution.push_back(
-              state.at(joint_model->getFirstVariableIndex() + vi));
+              state.at(static_cast<size_t>(joint_model->getFirstVariableIndex()) + vi));
       }
     }
 

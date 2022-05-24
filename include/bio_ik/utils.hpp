@@ -398,6 +398,7 @@ template <class BASE, class... ARGS> class Factory
             : type(typeid(void))
         {
         }
+        virtual ~ClassBase() = 0;
     };
     typedef std::set<ClassBase*> MapType;
     static MapType& classes()

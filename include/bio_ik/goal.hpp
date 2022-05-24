@@ -34,7 +34,7 @@
 
 #pragma once
 
-#include "frame.h"
+#include <bio_ik/frame.hpp>
 
 #include <moveit/kinematics_base/kinematics_base.h>
 

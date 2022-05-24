@@ -34,9 +34,9 @@
 
 #pragma once
 
-#include "goal.h"
+#include <bio_ik/goal.hpp>
 
-#include "robot_info.h"
+#include <bio_ik/robot_info.hpp>
 
 #include <tf2/LinearMath/Vector3.h>
 #include <tf2/LinearMath/Quaternion.h>

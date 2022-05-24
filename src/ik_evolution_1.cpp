@@ -32,7 +32,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  *********************************************************************/
 
-#include "ik_base.h"
+#include <bio_ik/ik_base.hpp>
+#include <bio_ik/ik_evolution_1.hpp>
 
 namespace bio_ik
 {
@@ -556,6 +557,13 @@ struct IKEvolution1 : IKBase
     virtual size_t concurrency() const { return 4; }
 };
 
-static IKFactory::Class<IKEvolution1> cIKEvolution1("bio1");
+std::optional<std::unique_ptr<IKSolver>> makeEvolution1Solver(
+    const IKParams& params) {
+  const auto& name = params.solver_class_name;
+  if (name == "bio1")
+    return std::make_unique<IKEvolution1>(params);
+  else
+    return std::nullopt;
+}
 
 }

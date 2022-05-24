@@ -32,7 +32,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  *********************************************************************/
 
-#include "ik_base.h"
+#include <bio_ik/ik_base.hpp>
 
 #include <geometric_shapes/bodies.h>
 #include <geometric_shapes/shapes.h>
@@ -41,7 +41,7 @@
 
 #include <mutex>
 
-#include <bio_ik/goal_types.h>
+#include <bio_ik/goal_types.hpp>
 
 namespace bio_ik
 {
