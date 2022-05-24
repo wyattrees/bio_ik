@@ -130,7 +130,7 @@ struct IKBase : Random
     RobotFK model_;
     RobotInfo modelInfo_;
     IKParams params_;
-    int thread_index_;
+    size_t thread_index_;
     Problem problem_;
     std::vector<Frame> null_tip_frames_;
     volatile int canceled_;

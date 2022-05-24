@@ -54,7 +54,7 @@ void TouchGoal::describe(GoalContext& context) const
         collision_model->collision_links.resize(robot_model->getLinkModelCount());
     }
     link_model = robot_model->getLinkModel(this->getLinkName());
-    size_t link_index = link_model->getLinkIndex();
+    size_t link_index = static_cast<size_t>(link_model->getLinkIndex());
     // auto fbrot = fb.rot.normalized();
     auto& collision_link = collision_model->collision_links[link_index];
     if(!collision_link.initialized)
@@ -92,9 +92,12 @@ void TouchGoal::describe(GoalContext& context) const
                         for(size_t triangle_index = 0; triangle_index < triangles.size() / 3; triangle_index++)
                         {
                             polygons.push_back(3);
-                            polygons.push_back(triangles[triangle_index * 3 + 0]);
-                            polygons.push_back(triangles[triangle_index * 3 + 1]);
-                            polygons.push_back(triangles[triangle_index * 3 + 2]);
+                            polygons.push_back(
+                                static_cast<int>(triangles[triangle_index * 3 + 0]));
+                            polygons.push_back(
+                                static_cast<int>(triangles[triangle_index * 3 + 1]));
+                            polygons.push_back(
+                                static_cast<int>(triangles[triangle_index * 3 + 2]));
                         }
                         // planes are given in the same order as the triangles, though redundant ones will appear only once.
                         for(const auto& plane : getPlanes())
@@ -160,9 +163,9 @@ double TouchGoal::evaluate(const GoalContext& context) const
 {
     double dmin = DBL_MAX;
     context.getTempVector().resize(1);
-    auto& last_collision_vertex = context.getTempVector()[0];
+    size_t last_collision_vertex = 0;
     auto& fb = context.getLinkFrame();
-    size_t link_index = link_model->getLinkIndex();
+    size_t link_index = static_cast<size_t>(link_model->getLinkIndex());
     auto& collision_link = collision_model->collision_links[link_index];
     for(size_t shape_index = 0; shape_index < link_model->getShapes().size(); shape_index++)
     {

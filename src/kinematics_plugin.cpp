@@ -138,6 +138,9 @@ struct BioIKKinematicsPlugin : kinematics::KinematicsBase {
     return false;
   }
 
+  // Using the non-pure virtual getPositionIK and not overriding.
+  using kinematics::KinematicsBase::getPositionIK;
+
   virtual bool getPositionIK(
       [[maybe_unused]] const geometry_msgs::msg::Pose &,
       [[maybe_unused]] const std::vector<double> &,
@@ -206,8 +209,13 @@ struct BioIKKinematicsPlugin : kinematics::KinematicsBase {
     // initialize parameters for IKParallel
     getRosParam<std::string>("mode", ikparams.solver_class_name, std::string("bio2_memetic"));
     getRosParam<bool>("counter", ikparams.enable_counter, false);
-    getRosParam<int>("threads", ikparams.thread_count, 0);
-    getRosParam<int>("random_seed", ikparams.random_seed, static_cast<int>(std::random_device()()));
+    // workaround for no raw "int" ROS parameter (only long int)
+    int64_t tc = 0;
+    getRosParam<int64_t>("threads", tc, 0);
+    ikparams.thread_count = static_cast<size_t>(tc);
+    int64_t rs = 0;
+    getRosParam<int64_t>("random_seed", rs, std::random_device()());
+    ikparams.random_seed = static_cast<uint64_t>(rs);
     // initialize parameters for Problem
     getRosParam<double>("dpos", ikparams.dpos, DBL_MAX);
     getRosParam<double>("drot", ikparams.drot, DBL_MAX);
@@ -215,8 +223,12 @@ struct BioIKKinematicsPlugin : kinematics::KinematicsBase {
 
     // initialize parameters for ik_evolution_1
     getRosParam<bool>("no_wipeout", ikparams.opt_no_wipeout, false);
-    getRosParam<int>("population_size", ikparams.population_size, 8);
-    getRosParam<int>("elite_count", ikparams.elite_count, 4);
+    int64_t ps = 8;
+    getRosParam<int64_t>("population_size", ps, 8);
+    ikparams.population_size = static_cast<size_t>(ps);
+    int64_t ec = 4;
+    getRosParam<int64_t>("elite_count", ec, 4);
+    ikparams.elite_count = static_cast<size_t>(ec);
     // TODO(wyattrees): update to "enable_linear_fitness"?
     getRosParam<bool>("linear_fitness", ikparams.linear_fitness, false);
 

@@ -59,8 +59,8 @@ struct IKParams
     // IKParallel parameters
     std::string solver_class_name;
     bool enable_counter;
-    int thread_count;
-    int random_seed;
+    size_t thread_count;
+    uint64_t random_seed;
 
     //Problem parameters
     double dpos;
@@ -69,8 +69,8 @@ struct IKParams
 
     // ik_evolution_1 parameters
     bool opt_no_wipeout;
-    int population_size;
-    int elite_count;
+    size_t population_size;
+    size_t elite_count;
     bool linear_fitness;
 };
 
@@ -371,66 +371,6 @@ public:
         v ^= v >> 7;
         v ^= v << 17;
         return v;
-    }
-};
-
-// class factory
-//
-// registering a class:
-//   static Factory<Base>::Class<Derived> reg("Derived");
-//
-// instantiation:
-//   Base* obj = Factory<Base>::create("Derived");
-//
-// cloning and object:
-//   p = Factory<Base>::clone(o);
-//
-template <class BASE, class... ARGS> class Factory
-{
-    typedef BASE* (*Constructor)(ARGS...);
-    struct ClassBase
-    {
-        std::string name;
-        std::type_index type;
-        virtual BASE* create(ARGS... args) const = 0;
-        virtual BASE* clone(const BASE*) const = 0;
-        ClassBase()
-            : type(typeid(void))
-        {
-        }
-        virtual ~ClassBase() = 0;
-    };
-    typedef std::set<ClassBase*> MapType;
-    static MapType& classes()
-    {
-        static MapType ff;
-        return ff;
-    }
-
-public:
-    template <class DERIVED> struct Class : ClassBase
-    {
-        BASE* create(ARGS... args) const { return new DERIVED(args...); }
-        BASE* clone(const BASE* o) const { return new DERIVED(*dynamic_cast<const DERIVED*>(o)); }
-        Class(const std::string& n)
-        {
-            this->name = n;
-            this->type = typeid(DERIVED);
-            classes().insert(this);
-        }
-        ~Class() { classes().erase(this); }
-    };
-    static BASE* create(const std::string& name, ARGS... args)
-    {
-        for(auto* f : classes())
-            if(f->name == name) return f->create(args...);
-        ERROR("class not found", name);
-    }
-    template <class DERIVED> static DERIVED* clone(const DERIVED* o)
-    {
-        for(auto* f : classes())
-            if(f->type == typeid(*o)) return dynamic_cast<DERIVED*>(f->clone(o));
-        ERROR("class not found", typeid(*o).name());
     }
 };
 

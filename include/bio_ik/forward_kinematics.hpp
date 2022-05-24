@@ -597,135 +597,151 @@ public:
             }
         }
     }
-    void computeJacobian(const std::vector<size_t>& variable_indices, Eigen::MatrixXd& jacobian)
-    {
-        double step_size = 0.00001;
-        double inv_step_size = 1.0 / step_size;
-        auto tip_count = static_cast<Eigen::Index>(tip_frames.size());
-        jacobian.resize(tip_count * 6, static_cast<Eigen::Index>(variable_indices.size()));
-        for(Eigen::Index icol = 0; icol < jacobian.cols(); icol++)
-        {
-            for(Eigen::Index itip = 0; itip < tip_count; itip++)
-            {
-                jacobian(itip * 6 + 0, icol) = 0;
-                jacobian(itip * 6 + 1, icol) = 0;
-                jacobian(itip * 6 + 2, icol) = 0;
-                jacobian(itip * 6 + 3, icol) = 0;
-                jacobian(itip * 6 + 4, icol) = 0;
-                jacobian(itip * 6 + 5, icol) = 0;
+    void computeJacobian(const std::vector<size_t>& variable_indices,
+                       Eigen::MatrixXd& jacobian) {
+    double step_size = 0.00001;
+    // double half_step_size = step_size * 0.5;
+    double inv_step_size = 1.0 / step_size;
+    auto tip_count = tip_frames.size();
+    jacobian.resize(static_cast<Eigen::Index>(tip_count * 6),
+                    static_cast<Eigen::Index>(variable_indices.size()));
+    for (Eigen::Index icol = 0;
+            icol < static_cast<Eigen::Index>(variable_indices.size()); ++icol) {
+        for (Eigen::Index itip = 0; itip < static_cast<Eigen::Index>(tip_count);
+            ++itip) {
+            jacobian(itip * 6 + 0, icol) = 0;
+            jacobian(itip * 6 + 1, icol) = 0;
+            jacobian(itip * 6 + 2, icol) = 0;
+            jacobian(itip * 6 + 3, icol) = 0;
+            jacobian(itip * 6 + 4, icol) = 0;
+            jacobian(itip * 6 + 5, icol) = 0;
+        }
+        }
+        for (size_t icol = 0; icol < variable_indices.size(); icol++) {
+        auto ivar = variable_indices[icol];
+        auto* var_joint_model =
+            robot_model_->getJointOfVariable(static_cast<int>(ivar));
+        if (var_joint_model->getMimic()) continue;
+        for (auto* joint_model :
+            joint_dependencies[static_cast<size_t>(var_joint_model->getJointIndex())]) {
+            double scale = 1;
+            for (auto* m = joint_model;
+                m->getMimic() && m->getMimic() != joint_model; m = m->getMimic()) {
+            scale *= m->getMimicFactor();
+            }
+            auto* link_model = joint_model->getChildLinkModel();
+            switch (joint_model->getType()) {
+            case moveit::core::JointModel::FIXED: {
+                // fixed joint: zero gradient (do nothing)
+                continue;
+            }
+            case moveit::core::JointModel::REVOLUTE: {
+                auto& link_frame = global_frames[static_cast<size_t>(link_model->getLinkIndex())];
+                for (size_t itip = 0; itip < tip_count; itip++) {
+                if (!tip_dependencies[static_cast<size_t>(joint_model->getJointIndex()) * tip_count +
+                                        itip])
+                    continue;
+
+                auto& tip_frame = tip_frames[itip];
+
+                auto q = link_frame.rot.inverse() * tip_frame.rot;
+                q = q.inverse();
+
+                auto rot = joint_axis_list_[static_cast<size_t>(joint_model->getJointIndex())];
+                quat_mul_vec(q, rot, rot);
+
+                auto vel = link_frame.pos - tip_frame.pos;
+                quat_mul_vec(tip_frame.rot.inverse(), vel, vel);
+
+                vel = vel.cross(rot);
+
+                auto eigen_itip = static_cast<Eigen::Index>(itip);
+                auto eigen_icol = static_cast<Eigen::Index>(icol);
+                jacobian(eigen_itip * 6 + 0, eigen_icol) += vel.x() * scale;
+                jacobian(eigen_itip * 6 + 1, eigen_icol) += vel.y() * scale;
+                jacobian(eigen_itip * 6 + 2, eigen_icol) += vel.z() * scale;
+
+                jacobian(eigen_itip * 6 + 3, eigen_icol) += rot.x() * scale;
+                jacobian(eigen_itip * 6 + 4, eigen_icol) += rot.y() * scale;
+                jacobian(eigen_itip * 6 + 5, eigen_icol) += rot.z() * scale;
+
+                // LOG("a", vel.x(), vel.y(), vel.z(), rot.x(), rot.y(), rot.z());
+                }
+                continue;
+            }
+            case moveit::core::JointModel::PRISMATIC: {
+                auto& link_frame = global_frames[static_cast<size_t>(link_model->getLinkIndex())];
+                for (size_t itip = 0; itip < tip_count; itip++) {
+                if (!tip_dependencies[static_cast<size_t>(joint_model->getJointIndex()) * tip_count +
+                                        itip])
+                    continue;
+
+                auto& tip_frame = tip_frames[itip];
+
+                auto q = link_frame.rot.inverse() * tip_frame.rot;
+                q = q.inverse();
+
+                auto axis = joint_axis_list_[static_cast<size_t>(joint_model->getJointIndex())];
+                auto v = axis;
+                quat_mul_vec(q, axis, v);
+
+                auto eigen_itip = static_cast<Eigen::Index>(itip);
+                auto eigen_icol = static_cast<Eigen::Index>(icol);
+                jacobian(eigen_itip * 6 + 0, eigen_icol) += v.x() * scale;
+                jacobian(eigen_itip * 6 + 1, eigen_icol) += v.y() * scale;
+                jacobian(eigen_itip * 6 + 2, eigen_icol) += v.z() * scale;
+
+                // LOG("a", v.x(), v.y(), v.z(), 0, 0, 0);
+                }
+                continue;
+            }
+            default: {
+                // numeric differentiation for joint types that are not yet
+                // implemented / or joint types that might be added to moveit in the
+                // future
+                auto ivar2 = ivar;
+                if (joint_model->getMimic())
+                ivar2 = ivar2 - static_cast<size_t>(var_joint_model->getFirstVariableIndex() +
+                        joint_model->getFirstVariableIndex());
+                auto& link_frame_1 = global_frames[static_cast<size_t>(link_model->getLinkIndex())];
+                auto v0 = variables_[ivar2];
+                // auto joint_frame_1 = getJointFrame(joint_model);
+                variables_[ivar2] = v0 + step_size;
+                auto joint_frame_2 = getJointFrame(joint_model);
+                variables_[ivar2] = v0;
+                Frame link_frame_2;
+                if (auto* parent_link_model = joint_model->getParentLinkModel())
+                concat(global_frames[static_cast<size_t>(parent_link_model->getLinkIndex())],
+                        getLinkFrame(link_model), joint_frame_2, link_frame_2);
+                else
+                concat(getLinkFrame(link_model), joint_frame_2, link_frame_2);
+                for (size_t itip = 0; itip < tip_count; itip++) {
+                if (!tip_dependencies[static_cast<size_t>(joint_model->getJointIndex()) * tip_count +
+                                        itip])
+                    continue;
+                auto tip_frame_1 = tip_frames[itip];
+                Frame tip_frame_2;
+                change(link_frame_2, link_frame_1, tip_frame_1, tip_frame_2);
+                auto twist = frameTwist(tip_frame_1, tip_frame_2);
+                auto eigen_itip = static_cast<Eigen::Index>(itip);
+                auto eigen_icol = static_cast<Eigen::Index>(icol);
+                jacobian(eigen_itip * 6 + 0, eigen_icol) +=
+                    twist.vel.x() * inv_step_size * scale;
+                jacobian(eigen_itip * 6 + 1, eigen_icol) +=
+                    twist.vel.y() * inv_step_size * scale;
+                jacobian(eigen_itip * 6 + 2, eigen_icol) +=
+                    twist.vel.z() * inv_step_size * scale;
+                jacobian(eigen_itip * 6 + 3, eigen_icol) +=
+                    twist.rot.x() * inv_step_size * scale;
+                jacobian(eigen_itip * 6 + 4, eigen_icol) +=
+                    twist.rot.y() * inv_step_size * scale;
+                jacobian(eigen_itip * 6 + 5, eigen_icol) +=
+                    twist.rot.z() * inv_step_size * scale;
+                }
+                continue;
+            }
             }
         }
-        for(Eigen::Index icol = 0; icol < jacobian.cols(); icol++)
-        {
-            auto ivar = variable_indices[static_cast<size_t>(icol)];
-            auto* var_joint_model = robot_model_->getJointOfVariable(static_cast<int>(ivar));
-            if(var_joint_model->getMimic()) continue;
-            auto var_joint_deps = joint_dependencies[static_cast<size_t>(var_joint_model->getJointIndex())];
-            for(auto* joint_model : var_joint_deps)
-            {
-                double scale = 1;
-                for(auto* m = joint_model; m->getMimic() && m->getMimic() != joint_model; m = m->getMimic())
-                {
-                    scale *= m->getMimicFactor();
-                }
-                auto* link_model = joint_model->getChildLinkModel();
-                switch(joint_model->getType())
-                {
-                case moveit::core::JointModel::FIXED:
-                {
-                    // fixed joint: zero gradient (do nothing)
-                    continue;
-                }
-                case moveit::core::JointModel::REVOLUTE:
-                {
-                    auto& link_frame = global_frames[static_cast<size_t>(link_model->getLinkIndex())];
-                    for(Eigen::Index itip = 0; itip < tip_count; itip++)
-                    {
-                        if(!tip_dependencies[static_cast<size_t>(joint_model->getJointIndex()) * tip_count + itip]) continue;
-
-                        auto& tip_frame = tip_frames[static_cast<size_t>(itip)];
-
-                        auto q = link_frame.rot.inverse() * tip_frame.rot;
-                        q = q.inverse();
-
-                        auto rot = joint_axis_list_[static_cast<size_t>(joint_model->getJointIndex())];
-                        quat_mul_vec(q, rot, rot);
-
-                        auto vel = link_frame.pos - tip_frame.pos;
-                        quat_mul_vec(tip_frame.rot.inverse(), vel, vel);
-
-                        vel = vel.cross(rot);
-
-                        jacobian(itip * 6 + 0, icol) += vel.x() * scale;
-                        jacobian(itip * 6 + 1, icol) += vel.y() * scale;
-                        jacobian(itip * 6 + 2, icol) += vel.z() * scale;
-
-                        jacobian(itip * 6 + 3, icol) += rot.x() * scale;
-                        jacobian(itip * 6 + 4, icol) += rot.y() * scale;
-                        jacobian(itip * 6 + 5, icol) += rot.z() * scale;
-
-                        // LOG("a", vel.x(), vel.y(), vel.z(), rot.x(), rot.y(), rot.z());
-                    }
-                    continue;
-                }
-                case moveit::core::JointModel::PRISMATIC:
-                {
-                    auto& link_frame = global_frames[static_cast<size_t>(link_model->getLinkIndex())];
-                    for(Eigen::Index itip = 0; itip < tip_count; itip++)
-                    {
-                        if(!tip_dependencies[static_cast<size_t>(joint_model->getJointIndex()) * static_cast<size_t>(tip_count) + static_cast<size_t>(itip)]) continue;
-
-                        auto& tip_frame = tip_frames[static_cast<size_t>(itip)];
-
-                        auto q = link_frame.rot.inverse() * tip_frame.rot;
-                        q = q.inverse();
-
-                        auto axis = joint_axis_list_[static_cast<size_t>(joint_model->getJointIndex())];
-                        auto v = axis;
-                        quat_mul_vec(q, axis, v);
-
-                        jacobian(itip * 6 + 0, icol) += v.x() * scale;
-                        jacobian(itip * 6 + 1, icol) += v.y() * scale;
-                        jacobian(itip * 6 + 2, icol) += v.z() * scale;
-
-                        // LOG("a", v.x(), v.y(), v.z(), 0, 0, 0);
-                    }
-                    continue;
-                }
-                default:
-                {
-                    // numeric differentiation for joint types that are not yet implemented / or joint types that might be added to moveit in the future
-                    auto ivar2 = ivar;
-                    if(joint_model->getMimic()) ivar2 = ivar2 - static_cast<size_t>(var_joint_model->getFirstVariableIndex() + joint_model->getFirstVariableIndex());
-                    auto& link_frame_1 = global_frames[static_cast<size_t>(link_model->getLinkIndex())];
-                    auto v0 = variables_[ivar2];
-                    // auto joint_frame_1 = getJointFrame(joint_model);
-                    variables_[ivar2] = v0 + step_size;
-                    auto joint_frame_2 = getJointFrame(joint_model);
-                    variables_[ivar2] = v0;
-                    Frame link_frame_2;
-                    if(auto* parent_link_model = joint_model->getParentLinkModel())
-                        concat(global_frames[static_cast<size_t>(parent_link_model->getLinkIndex())], getLinkFrame(link_model), joint_frame_2, link_frame_2);
-                    else
-                        concat(getLinkFrame(link_model), joint_frame_2, link_frame_2);
-                    for(Eigen::Index itip = 0; itip < tip_count; itip++)
-                    {
-                        if(!tip_dependencies[static_cast<size_t>(joint_model->getJointIndex()) * static_cast<size_t>(tip_count) + static_cast<size_t>(itip)]) continue;
-                        auto tip_frame_1 = tip_frames[itip];
-                        Frame tip_frame_2;
-                        change(link_frame_2, link_frame_1, tip_frame_1, tip_frame_2);
-                        auto twist = frameTwist(tip_frame_1, tip_frame_2);
-                        jacobian(itip * 6 + 0, icol) += twist.vel.x() * inv_step_size * scale;
-                        jacobian(itip * 6 + 1, icol) += twist.vel.y() * inv_step_size * scale;
-                        jacobian(itip * 6 + 2, icol) += twist.vel.z() * inv_step_size * scale;
-                        jacobian(itip * 6 + 3, icol) += twist.rot.x() * inv_step_size * scale;
-                        jacobian(itip * 6 + 4, icol) += twist.rot.y() * inv_step_size * scale;
-                        jacobian(itip * 6 + 5, icol) += twist.rot.z() * inv_step_size * scale;
-                    }
-                    continue;
-                }
-                }
-            }
         }
     }
 };
@@ -812,7 +828,7 @@ public:
             tip_frames_aligned[i] = tip_frames[i];
 
         // init first order approximators
-        {
+       { 
             if(mutation_approx_frames.size() < tip_count) mutation_approx_frames.resize(tip_count);
 
             for(size_t itip = 0; itip < tip_count; itip++)
@@ -824,33 +840,39 @@ public:
 
             computeJacobian(variable_indices, mutation_approx_jacobian);
 
-            for(size_t icol = 0; icol < variable_indices.size(); icol++)
-            {
+            for (size_t icol = 0; icol < variable_indices.size(); icol++) {
                 size_t ivar = variable_indices[icol];
-                for(size_t itip = 0; itip < tip_count; itip++)
+                for (size_t itip = 0; itip < tip_count; itip++) {
                 {
-                    {
-                        Vector3 t;
-                        t.setX(mutation_approx_jacobian(itip * 6 + 0, icol));
-                        t.setY(mutation_approx_jacobian(itip * 6 + 1, icol));
-                        t.setZ(mutation_approx_jacobian(itip * 6 + 2, icol));
-                        quat_mul_vec(tip_frames[itip].rot, t, t);
-                        mutation_approx_frames[itip][ivar].pos = t;
-                    }
+                    Vector3 t;
+                    auto eigen_itip = static_cast<Eigen::Index>(itip);
+                    auto eigen_icol = static_cast<Eigen::Index>(icol);
+                    t.setX(mutation_approx_jacobian(eigen_itip * 6 + 0, eigen_icol));
+                    t.setY(mutation_approx_jacobian(eigen_itip * 6 + 1, eigen_icol));
+                    t.setZ(mutation_approx_jacobian(eigen_itip * 6 + 2, eigen_icol));
+                    quat_mul_vec(tip_frames[itip].rot, t, t);
+                    mutation_approx_frames[itip][ivar].pos = t;
+                }
 
-                    {
-                        Quaternion q;
-                        q.setX(mutation_approx_jacobian(itip * 6 + 3, icol) * 0.5);
-                        q.setY(mutation_approx_jacobian(itip * 6 + 4, icol) * 0.5);
-                        q.setZ(mutation_approx_jacobian(itip * 6 + 5, icol) * 0.5);
-                        q.setW(1.0);
-                        quat_mul_quat(tip_frames[itip].rot, q, q);
-                        q -= tip_frames[itip].rot;
-                        mutation_approx_frames[itip][ivar].rot = q;
-                    }
+                {
+                    Quaternion q;
+                    auto eigen_itip = static_cast<Eigen::Index>(itip);
+                    auto eigen_icol = static_cast<Eigen::Index>(icol);
+                    q.setX(mutation_approx_jacobian(eigen_itip * 6 + 3, eigen_icol) *
+                        0.5);
+                    q.setY(mutation_approx_jacobian(eigen_itip * 6 + 4, eigen_icol) *
+                        0.5);
+                    q.setZ(mutation_approx_jacobian(eigen_itip * 6 + 5, eigen_icol) *
+                        0.5);
+                    q.setW(1.0);
+                    quat_mul_quat(tip_frames[itip].rot, q, q);
+                    q -= tip_frames[itip].rot;
+                    mutation_approx_frames[itip][ivar].rot = q;
+                }
                 }
             }
         }
+    
 
 // init second order approximators
 #if USE_QUADRATIC_EXTRAPOLATION
@@ -1469,37 +1491,37 @@ typedef RobotFK_Mutator RobotFK;
 class RobotFK_MoveIt
 {
     moveit::core::RobotModelConstPtr robot_model_;
-    moveit::core::RobotState robot_state;
-    std::vector<Frame> tipFrames;
-    std::vector<const moveit::core::LinkModel*> tipLinks;
-    std::vector<double> jj;
+    moveit::core::RobotState robot_state_;
+    std::vector<Frame> tipFrames_;
+    std::vector<const moveit::core::LinkModel*> tipLinks_;
+    std::vector<double> jj_;
 
 public:
     RobotFK_MoveIt(moveit::core::RobotModelConstPtr model)
         : robot_model_(model)
-        , robot_state(model)
+        , robot_state_(model)
     {
     }
     void initialize(const std::vector<size_t>& tip_link_indices)
     {
-        tipFrames.resize(tip_link_indices.size());
-        tipLinks.resize(tip_link_indices.size());
+        tipFrames_.resize(tip_link_indices.size());
+        tipLinks_.resize(tip_link_indices.size());
         for(size_t i = 0; i < tip_link_indices.size(); i++)
-            tipLinks[i] = robot_model_->getLinkModel(static_cast<int>(tip_link_indices[i]));
+            tipLinks_[i] = robot_model_->getLinkModel(static_cast<int>(tip_link_indices[i]));
     }
     void applyConfiguration(const std::vector<double>& jj0)
     {
         BLOCKPROFILER("RobotFK_MoveIt applyConfiguration");
-        jj = jj0;
-        robot_model_->interpolate(jj0.data(), jj0.data(), 0.5, jj.data()); // force mimic update
-        robot_state.setVariablePositions(jj);
-        robot_state.update();
-        for(size_t i = 0; i < tipFrames.size(); i++)
-            tipFrames[i] = Frame(robot_state.getGlobalLinkTransform(tipLinks[i]));
+        jj_ = jj0;
+        robot_model_->interpolate(jj0.data(), jj0.data(), 0.5, jj_.data()); // force mimic update
+        robot_state_.setVariablePositions(jj_);
+        robot_state_.update();
+        for(size_t i = 0; i < tipFrames_.size(); i++)
+            tipFrames_[i] = Frame(robot_state_.getGlobalLinkTransform(tipLinks_[i]));
     }
     inline void incrementalBegin([[maybe_unused]] const std::vector<double>& jj) {}
     inline void incrementalEnd() {}
-    const Frame& getTipFrame(size_t fi) const { return tipFrames[fi]; }
-    const std::vector<Frame>& getTipFrames() const { return tipFrames; }
+    const Frame& getTipFrame(size_t fi) const { return tipFrames_[fi]; }
+    const std::vector<Frame>& getTipFrames() const { return tipFrames_; }
 };
 }
