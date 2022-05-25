@@ -33,7 +33,7 @@
  *********************************************************************/
 
 #include "ik_base.h"
-#include <bio_ik/ik_evolution_1.h>
+#include "ik_evolution_1.h"
 
 namespace bio_ik
 {

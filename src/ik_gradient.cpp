@@ -33,6 +33,7 @@
  *********************************************************************/
 
 #include "ik_base.h"
+#include "ik_gradient.h"
 
 namespace bio_ik
 {

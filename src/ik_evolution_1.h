@@ -28,19 +28,18 @@
 
 #pragma once
 
-#include "../../src/ik_base.h"  // for IKSolver
+#include <memory>
+#include <optional>
+#include <set>
+#include <string>
+
+#include "ik_base.h"  // for IKSolver
 
 namespace bio_ik {
 
-std::optional<std::unique_ptr<IKSolver>> makeGradientDecentSolver(
+std::optional<std::unique_ptr<IKSolver>> makeEvolution1Solver(
     const IKParams& params);
 
-const auto getGradientDecentModes = []() {
-  return std::set<std::string>{
-      "gd",     "gd_2",   "gd_4",  "gd_8",   "gd_r",   "gd_r_2",
-      "gd_r_4", "gd_r_8", "gd_c",  "gd_c_2", "gd_c_4", "gd_c_8",
-      "jac",    "jac_2",  "jac_4", "jac_8",
-  };
-};
+const auto getEvolution1Modes = []() { return std::set<std::string>{"bio1"}; };
 
 }  // namespace bio_ik

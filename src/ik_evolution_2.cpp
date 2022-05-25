@@ -33,6 +33,7 @@
  *********************************************************************/
 
 #include "ik_base.h"
+#include "ik_evolution_2.h"
 
 #ifdef ENABLE_CPP_OPTLIB
 #include "cppoptlib/solver/lbfgssolver.h"

@@ -33,6 +33,7 @@
  *********************************************************************/
 
 #include "ik_base.h"
+#include "ik_evolution1.h"
 
 #include <fann.h>
 #include <fann_cpp.h>

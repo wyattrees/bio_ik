@@ -33,10 +33,10 @@
  *********************************************************************/
 
 #include "ik_base.h"
-#include <bio_ik/ik_evolution_1.h>
-#include <bio_ik/ik_evolution_2.h>
-#include <bio_ik/ik_test.h>
-#include <bio_ik/ik_gradient.h>
+#include "ik_evolution_1.h"
+#include "ik_evolution_2.h"
+#include "ik_test.h"
+#include "ik_gradient.h"
 
 #include <boost/thread/barrier.hpp>
 #include <optional>
