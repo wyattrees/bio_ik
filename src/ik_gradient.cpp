@@ -32,7 +32,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  *********************************************************************/
 
-#include <bio_ik/ik_base.hpp>
+#include "ik_base.h"
 
 namespace bio_ik
 {

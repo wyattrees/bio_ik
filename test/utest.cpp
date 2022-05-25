@@ -37,8 +37,8 @@
 #include <gtest/gtest.h>
 #include <random>
 
-#include <bio_ik/utils.hpp>
-#include <bio_ik/frame.hpp>
+#include "../src/utils.h"
+#include <bio_ik/frame.h>
 
 using namespace bio_ik;
 

@@ -32,11 +32,11 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  *********************************************************************/
 
-#include <bio_ik/ik_base.hpp>
-#include <bio_ik/ik_evolution_1.hpp>
-#include <bio_ik/ik_evolution_2.hpp>
-#include <bio_ik/ik_test.hpp>
-#include <bio_ik/ik_gradient.hpp>
+#include "ik_base.h"
+#include <bio_ik/ik_evolution_1.h>
+#include <bio_ik/ik_evolution_2.h>
+#include <bio_ik/ik_test.h>
+#include <bio_ik/ik_gradient.h>
 
 #include <boost/thread/barrier.hpp>
 #include <optional>

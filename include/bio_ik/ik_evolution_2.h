@@ -33,7 +33,7 @@
 #include <set>
 #include <string>
 
-#include <bio_ik/ik_base.hpp>  // for IKSolver
+#include "../../src/ik_base.h"  // for IKSolver
 
 namespace bio_ik {
 

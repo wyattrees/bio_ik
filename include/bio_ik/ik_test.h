@@ -28,34 +28,17 @@
 
 #pragma once
 
-#include <Eigen/Core>          // For NumTraits
-#include <bio_ik/ik_base.hpp>  // for IKSolver
-#include <bio_ik/problem.hpp>  // for Problem, Problem::GoalInfo
-#include <bio_ik/utils.hpp>    // for FNPROFILER
-#include <cmath>               // for isfinite
-#include <cstddef>             // for size_t
-#include <ext/alloc_traits.h>  // for __alloc_traits<>::value_type
-#include <kdl/frames.hpp>      // for Twist, Vector
 #include <memory>
 #include <optional>
 #include <set>
 #include <string>
-#include <vector>  // for vector, allocator
 
-#include "bio_ik/frame.hpp"       // for Frame, frameTwist
-#include "bio_ik/robot_info.hpp"  // for RobotInfo
+#include "../../src/ik_base.h"  // for IKSolver
 
 namespace bio_ik {
 
-std::optional<std::unique_ptr<IKSolver>> makeGradientDecentSolver(
-    const IKParams& params);
+std::optional<std::unique_ptr<IKSolver>> makeTestSolver(const IKParams& params);
 
-const auto getGradientDecentModes = []() {
-  return std::set<std::string>{
-      "gd",     "gd_2",   "gd_4",  "gd_8",   "gd_r",   "gd_r_2",
-      "gd_r_4", "gd_r_8", "gd_c",  "gd_c_2", "gd_c_4", "gd_c_8",
-      "jac",    "jac_2",  "jac_4", "jac_8",
-  };
-};
+const auto getTestModes = []() { return std::set<std::string>{"test"}; };
 
 }  // namespace bio_ik

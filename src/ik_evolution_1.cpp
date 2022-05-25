@@ -32,8 +32,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  *********************************************************************/
 
-#include <bio_ik/ik_base.hpp>
-#include <bio_ik/ik_evolution_1.hpp>
+#include "ik_base.h"
+#include <bio_ik/ik_evolution_1.h>
 
 namespace bio_ik
 {
