@@ -50,27 +50,28 @@
 
 namespace bio_ik
 {
+
 struct IKParams
 {
-  moveit::core::RobotModelConstPtr robot_model;
-  const moveit::core::JointModelGroup* joint_model_group;
+    moveit::core::RobotModelConstPtr robot_model;
+    const moveit::core::JointModelGroup* joint_model_group;
 
-  // IKParallel parameters
-  std::string solver_class_name;
-  bool enable_counter;
-  size_t thread_count;
-  uint64_t random_seed;
+    // IKParallel parameters
+    std::string solver_class_name;
+    bool enable_counter;
+    size_t thread_count;
+    uint64_t random_seed;
 
-  // Problem parameters
-  double dpos;
-  double drot;
-  double dtwist;
+    //Problem parameters
+    double dpos;
+    double drot;
+    double dtwist;
 
-  // ik_evolution_1 parameters
-  bool opt_no_wipeout;
-  size_t population_size;
-  size_t elite_count;
-  bool linear_fitness;
+    // ik_evolution_1 parameters
+    bool opt_no_wipeout;
+    size_t population_size;
+    size_t elite_count;
+    bool linear_fitness;
 };
 
 // Uncomment to enable logging
@@ -85,16 +86,11 @@ struct IKParams
 //#define LOG_STREAM (std::cerr << std::scientific)
 #define LOG_STREAM (std::cerr)
 
-template <class T>
-inline void vprint(std::ostream& s, const T& a)
+template <class T> inline void vprint(std::ostream& s, const T& a) { s << a << std::endl; }
+template <class T, class... AA> inline void vprint(std::ostream& s, const T& a, const AA&... aa)
 {
-  s << a << std::endl;
-}
-template <class T, class... AA>
-inline void vprint(std::ostream& s, const T& a, const AA&... aa)
-{
-  s << a << " ";
-  vprint(s, aa...);
+    s << a << " ";
+    vprint(s, aa...);
 }
 
 #define LOG2(...) vprint(LOG_STREAM, "ikbio ", __VA_ARGS__)
@@ -113,14 +109,14 @@ inline void vprint(std::ostream& s, const T& a, const AA&... aa)
 // show error and abort
 // #define ERROR(...) { LOG("ERROR", __VA_ARGS__); exit(-1); }
 // #define ERROR(a, ...) { LOG(a, __VA_ARGS__); LOG_STREAM.flush(); throw std::runtime_error(a); }
-#define ERROR(...)                                                                                                     \
-  {                                                                                                                    \
-    LOG2(__VA_ARGS__);                                                                                                 \
-    LOG_STREAM.flush();                                                                                                \
-    std::stringstream ss;                                                                                              \
-    vprint(ss, __VA_ARGS__);                                                                                           \
-    throw std::runtime_error(ss.str());                                                                                \
-  }
+#define ERROR(...)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 \
+    {                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              \
+        LOG2(__VA_ARGS__);                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         \
+        LOG_STREAM.flush();                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        \
+        std::stringstream ss;                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      \
+        vprint(ss, __VA_ARGS__);                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   \
+        throw std::runtime_error(ss.str());                                                                                                                                                                                                                                                                                                                                                                                                                                                                        \
+    }
 // #define ERROR(...) { LOG_ALWAYS(__VA_ARGS__); std::raise(SIGINT); }
 
 // profiler
@@ -132,27 +128,26 @@ inline void vprint(std::ostream& s, const T& a, const AA&... aa)
 // profiled block or function
 struct ProfilerBin
 {
-  const char* volatile name;  // name of scope or function, also used as indicator if it is currently being executed
-  std::atomic<int> counter;   // only used by CounterScope / COUNTERPROFILER
-  ProfilerBin() : name(0)
-  {
-  }
+    const char* volatile name; // name of scope or function, also used as indicator if it is currently being executed
+    std::atomic<int> counter; // only used by CounterScope / COUNTERPROFILER
+    ProfilerBin()
+        : name(0)
+    {
+    }
 };
 
 // allocate globally unique profiler buffer via template
-template <class force_weak_linker_symbol = void>
-ProfilerBin* getProfilerBuffer()
+template <class force_weak_linker_symbol = void> ProfilerBin* getProfilerBuffer()
 {
-  static std::vector<ProfilerBin> buffer(10000);
-  return buffer.data();
+    static std::vector<ProfilerBin> buffer(10000);
+    return buffer.data();
 }
 
 // reserve profiler buffer segment for current compilation unit
-template <class force_weak_linker_symbol = void>
-ProfilerBin* getProfilerSegment()
+template <class force_weak_linker_symbol = void> ProfilerBin* getProfilerSegment()
 {
-  static size_t index = 0;
-  return getProfilerBuffer() + (index++) * 20;
+    static size_t index = 0;
+    return getProfilerBuffer() + (index++) * 20;
 }
 static ProfilerBin* profiler_segment = getProfilerSegment();
 
@@ -160,39 +155,33 @@ static ProfilerBin* profiler_segment = getProfilerSegment();
 // null if profiler is disabled
 struct ProfilerInfo
 {
-  void* stack_begin;
-  void* stack_end;
+    void* stack_begin;
+    void* stack_end;
 };
 
 // declare globally unique profiler info via template
-template <class force_weak_linker_symbol = void>
-ProfilerInfo& getProfilerInfo()
+template <class force_weak_linker_symbol = void> ProfilerInfo& getProfilerInfo()
 {
-  static ProfilerInfo info;
-  return info;
+    static ProfilerInfo info;
+    return info;
 }
 static ProfilerInfo& profiler_info = getProfilerInfo();
 
 // profiles a scope or function
-template <size_t ID>
-struct ProfilerScope
+template <size_t ID> struct ProfilerScope
 {
-  __attribute__((always_inline)) inline ProfilerScope(const char* name)
-  {
-    if (profiler_info.stack_begin == 0)
-      return;
-    if (this < profiler_info.stack_begin || this > profiler_info.stack_end)
-      return;
-    profiler_segment[ID].name = name;
-  }
-  __attribute__((always_inline)) inline ~ProfilerScope()
-  {
-    if (profiler_info.stack_begin == 0)
-      return;
-    if (this < profiler_info.stack_begin || this > profiler_info.stack_end)
-      return;
-    profiler_segment[ID].name = 0;
-  }
+    __attribute__((always_inline)) inline ProfilerScope(const char* name)
+    {
+        if(profiler_info.stack_begin == 0) return;
+        if(this < profiler_info.stack_begin || this > profiler_info.stack_end) return;
+        profiler_segment[ID].name = name;
+    }
+    __attribute__((always_inline)) inline ~ProfilerScope()
+    {
+        if(profiler_info.stack_begin == 0) return;
+        if(this < profiler_info.stack_begin || this > profiler_info.stack_end) return;
+        profiler_segment[ID].name = 0;
+    }
 };
 #define FNPROFILER() volatile ProfilerScope<__COUNTER__> _profilerscope(__func__);
 #define BLOCKPROFILER(name) volatile ProfilerScope<__COUNTER__> _profilerscope(name);
@@ -200,121 +189,107 @@ struct ProfilerScope
 // per-thread profiling
 struct ThreadScope
 {
-  size_t id;
-  __attribute__((always_inline)) inline ThreadScope(const char* name, size_t id) : id(id)
-  {
-    if (profiler_info.stack_begin == 0)
-      return;
-    profiler_segment[id].name = name;
-  }
-  __attribute__((always_inline)) inline ~ThreadScope()
-  {
-    if (profiler_info.stack_begin == 0)
-      return;
-    profiler_segment[id].name = 0;
-  }
+    size_t id;
+    __attribute__((always_inline)) inline ThreadScope(const char* name, size_t id)
+        : id(id)
+    {
+        if(profiler_info.stack_begin == 0) return;
+        profiler_segment[id].name = name;
+    }
+    __attribute__((always_inline)) inline ~ThreadScope()
+    {
+        if(profiler_info.stack_begin == 0) return;
+        profiler_segment[id].name = 0;
+    }
 };
-#define THREADPROFILER(name, id)                                                                                       \
-  static const char* _threadscope_names[] = { name "0", name "1", name "2", name "3" };                                \
-  volatile ThreadScope _threadscope(_threadscope_names[id], __COUNTER__ + id);                                         \
-  (__COUNTER__, __COUNTER__, __COUNTER__, __COUNTER__, __COUNTER__);
+#define THREADPROFILER(name, id)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   \
+    static const char* _threadscope_names[] = {name "0", name "1", name "2", name "3"};                                                                                                                                                                                                                                                                                                                                                                                                                            \
+    volatile ThreadScope _threadscope(_threadscope_names[id], __COUNTER__ + id);                                                                                                                                                                                                                                                                                                                                                                                                                                   \
+    (__COUNTER__, __COUNTER__, __COUNTER__, __COUNTER__, __COUNTER__);
 
 // profiling across multiple threads
 struct CounterScope
 {
-  size_t id;
-  __attribute__((always_inline)) inline CounterScope(const char* name, size_t id) : id(id)
-  {
-    if (profiler_info.stack_begin == 0)
-      return;
-    if ((profiler_segment[id].counter++) == 0)
-      profiler_segment[id].name = name;
-  }
-  __attribute__((always_inline)) inline ~CounterScope()
-  {
-    if (profiler_info.stack_begin == 0)
-      return;
-    if ((--profiler_segment[id].counter) == 0)
-      profiler_segment[id].name = 0;
-  }
+    size_t id;
+    __attribute__((always_inline)) inline CounterScope(const char* name, size_t id)
+        : id(id)
+    {
+        if(profiler_info.stack_begin == 0) return;
+        if((profiler_segment[id].counter++) == 0) profiler_segment[id].name = name;
+    }
+    __attribute__((always_inline)) inline ~CounterScope()
+    {
+        if(profiler_info.stack_begin == 0) return;
+        if((--profiler_segment[id].counter) == 0) profiler_segment[id].name = 0;
+    }
 };
 #define COUNTERPROFILER(name) volatile CounterScope _counterscope(name, __COUNTER__);
 
 // starts profiler and periodically writes results to log
 struct Profiler
 {
-  std::thread thread;
-  volatile int exit_flag;
-  Profiler()
-  {
-    pthread_attr_t attr;
-    pthread_getattr_np(pthread_self(), &attr);
-    void* stack_addr;
-    size_t stack_size;
-    pthread_attr_getstack(&attr, &stack_addr, &stack_size);
-    profiler_info.stack_begin = stack_addr;
-    profiler_info.stack_end = (char*)stack_addr + stack_size;
-    const size_t maxbin = 1000;
-    static std::mutex mutex;
-    static std::unordered_map<const char*, size_t> samples;
-    exit_flag = 0;
-    std::thread t([this]() {
-      auto* profiler_bins = getProfilerBuffer();
-      while (true)
-      {
-        for (int iter = 0; iter < 100; iter++)
-        {
-          for (int iter = 0; iter < 100; iter++)
-          {
-            int i = rand() % maxbin;
-            const char* p = profiler_bins[i].name;
-            if (p)
-              samples[p]++;
-          }
-          if (exit_flag)
-            break;
-          std::this_thread::sleep_for(std::chrono::duration<size_t, std::micro>(rand() % 1000));
-        }
-        {
-          double thistime = ros::WallTime::now().toSec();
-          static double lasttime = 0.0;
-          if (thistime < lasttime + 1)
-            continue;
-          lasttime = thistime;
-          static std::vector<std::pair<const char*, size_t>> data;
-          data.clear();
-          for (auto& p : samples)
-            data.push_back(p);
-          std::sort(data.begin(), data.end(),
-                    [](const std::pair<const char*, size_t>& a, const std::pair<const char*, size_t>& b) {
-                      return a.second > b.second;
-                    });
-          LOG("");
-          LOG("profiler");
-          for (auto& d : data)
-          {
-            double v = d.second * 100.0 / data[0].second;
-            char s[32];
-            sprintf(s, "%6.2f%%", v);
-            LOG("p", s, d.first);
-          }
-          LOG("");
-        }
-        if (exit_flag)
-          break;
-      }
-    });
-    std::swap(thread, t);
-  }
-  ~Profiler()
-  {
-    exit_flag = true;
-    thread.join();
-  }
-  static void start()
-  {
-    static Profiler profiler;
-  }
+    std::thread thread;
+    volatile int exit_flag;
+    Profiler()
+    {
+        pthread_attr_t attr;
+        pthread_getattr_np(pthread_self(), &attr);
+        void* stack_addr;
+        size_t stack_size;
+        pthread_attr_getstack(&attr, &stack_addr, &stack_size);
+        profiler_info.stack_begin = stack_addr;
+        profiler_info.stack_end = (char*)stack_addr + stack_size;
+        const size_t maxbin = 1000;
+        static std::mutex mutex;
+        static std::unordered_map<const char*, size_t> samples;
+        exit_flag = 0;
+        std::thread t([this]() {
+            auto* profiler_bins = getProfilerBuffer();
+            while(true)
+            {
+                for(int iter = 0; iter < 100; iter++)
+                {
+                    for(int iter = 0; iter < 100; iter++)
+                    {
+                        int i = rand() % maxbin;
+                        const char* p = profiler_bins[i].name;
+                        if(p) samples[p]++;
+                    }
+                    if(exit_flag) break;
+                    std::this_thread::sleep_for(std::chrono::duration<size_t, std::micro>(rand() % 1000));
+                }
+                {
+                    double thistime = ros::WallTime::now().toSec();
+                    static double lasttime = 0.0;
+                    if(thistime < lasttime + 1) continue;
+                    lasttime = thistime;
+                    static std::vector<std::pair<const char*, size_t>> data;
+                    data.clear();
+                    for(auto& p : samples)
+                        data.push_back(p);
+                    std::sort(data.begin(), data.end(), [](const std::pair<const char*, size_t>& a, const std::pair<const char*, size_t>& b) { return a.second > b.second; });
+                    LOG("");
+                    LOG("profiler");
+                    for(auto& d : data)
+                    {
+                        double v = d.second * 100.0 / data[0].second;
+                        char s[32];
+                        sprintf(s, "%6.2f%%", v);
+                        LOG("p", s, d.first);
+                    }
+                    LOG("");
+                }
+                if(exit_flag) break;
+            }
+        });
+        std::swap(thread, t);
+    }
+    ~Profiler()
+    {
+        exit_flag = true;
+        thread.join();
+    }
+    static void start() { static Profiler profiler; }
 };
 
 #else
@@ -326,122 +301,104 @@ struct Profiler
 
 struct Profiler
 {
-  static void start()
-  {
-  }
+    static void start() {}
 };
 
 #endif
 
-__attribute__((always_inline)) inline double mix(double a, double b, double f)
-{
-  return a * (1.0 - f) + b * f;
-}
+__attribute__((always_inline)) inline double mix(double a, double b, double f) { return a * (1.0 - f) + b * f; }
 
 __attribute__((always_inline)) inline double clamp(double v, double lo, double hi)
 {
-  if (v < lo)
-    v = lo;
-  if (v > hi)
-    v = hi;
-  return v;
+    if(v < lo) v = lo;
+    if(v > hi) v = hi;
+    return v;
 }
 
 __attribute__((always_inline)) inline double clamp2(double v, double lo, double hi)
 {
-  if (__builtin_expect(v < lo, 0))
-    v = lo;
-  if (__builtin_expect(v > hi, 0))
-    v = hi;
-  return v;
+    if(__builtin_expect(v < lo, 0)) v = lo;
+    if(__builtin_expect(v > hi, 0)) v = hi;
+    return v;
 }
 
 __attribute__((always_inline)) inline double smoothstep(double a, double b, double v)
 {
-  v = clamp((v - a) / (b - a), 0.0, 1.0);
-  return v * v * (3.0 - 2.0 * v);
+    v = clamp((v - a) / (b - a), 0.0, 1.0);
+    return v * v * (3.0 - 2.0 * v);
 }
 
 __attribute__((always_inline)) inline double sign(double f)
 {
-  if (f < 0.0)
-    f = -1.0;
-  if (f > 0.0)
-    f = +1.0;
-  return f;
+    if(f < 0.0) f = -1.0;
+    if(f > 0.0) f = +1.0;
+    return f;
 }
 
-template <class t>
-class linear_int_distribution
+template <class t> class linear_int_distribution
 {
-  t n;
-  std::uniform_int_distribution<t> base;
+    t n;
+    std::uniform_int_distribution<t> base;
 
 public:
-  inline linear_int_distribution(t vrange) : n(vrange), base(0, vrange)
-  {
-  }
-  template <class generator>
-  inline t operator()(generator& g)
-  {
-    while (true)
+    inline linear_int_distribution(t vrange)
+        : n(vrange)
+        , base(0, vrange)
     {
-      t v = base(g) + base(g);
-      if (v < n)
-        return n - v - 1;
     }
-  }
+    template <class generator> inline t operator()(generator& g)
+    {
+        while(true)
+        {
+            t v = base(g) + base(g);
+            if(v < n) return n - v - 1;
+        }
+    }
 };
 
 struct XORShift64
 {
-  uint64_t v;
+    uint64_t v;
 
 public:
-  XORShift64() : v(88172645463325252ull)
-  {
-  }
-  __attribute__((always_inline)) inline uint64_t operator()()
-  {
-    v ^= v << 13;
-    v ^= v >> 7;
-    v ^= v << 17;
-    return v;
-  }
+    XORShift64()
+        : v(88172645463325252ull)
+    {
+    }
+    __attribute__((always_inline)) inline uint64_t operator()()
+    {
+        v ^= v << 13;
+        v ^= v >> 7;
+        v ^= v << 17;
+        return v;
+    }
 };
 
 // Alloctes memory properly aligned for SIMD operations
-template <class T, size_t A>
-struct aligned_allocator : public std::allocator<T>
+template <class T, size_t A> struct aligned_allocator : public std::allocator<T>
 {
-  typedef size_t size_type;
-  typedef ptrdiff_t difference_type;
-  typedef T* pointer;
-  typedef const T* const_pointer;
-  typedef T& reference;
-  typedef const T& const_reference;
-  typedef T value_type;
-  T* allocate(size_t s, [[maybe_unused]] const void* hint = 0)
-  {
-    void* p;
-    if (posix_memalign(&p, A, sizeof(T) * s + 64))
-      throw std::bad_alloc();
-    return static_cast<T*>(p);
-  }
-  void deallocate(T* ptr, size_t /*unused*/)
-  {
-    free(ptr);
-  }
-  template <class U>
-  struct rebind
-  {
-    typedef aligned_allocator<U, A> other;
-  };
+    typedef size_t size_type;
+    typedef ptrdiff_t difference_type;
+    typedef T* pointer;
+    typedef const T* const_pointer;
+    typedef T& reference;
+    typedef const T& const_reference;
+    typedef T value_type;
+    T* allocate(size_t s, [[maybe_unused]] const void* hint = 0)
+    {
+        void* p;
+        if(posix_memalign(&p, A, sizeof(T) * s + 64)) throw std::bad_alloc();
+        return static_cast<T*>(p);
+    }
+    void deallocate(T* ptr, size_t /*unused*/) { free(ptr); }
+    template <class U> struct rebind
+    {
+        typedef aligned_allocator<U, A> other;
+    };
 };
 
 // std::vector typedef with proper memory alignment for SIMD operations
-template <class T>
-struct aligned_vector : std::vector<T, aligned_allocator<T, 32>>
+template <class T> struct aligned_vector : std::vector<T, aligned_allocator<T, 32>>
 {
 };
-}  // namespace bio_ik
+}
