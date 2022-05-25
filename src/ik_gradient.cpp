@@ -110,6 +110,7 @@ template <class BASE> struct IKJacobianBase : BASE
                     jacobian(itip * 6 + 4, icol) *= rotational_scale;
                     jacobian(itip * 6 + 5, icol) *= rotational_scale;
                 }
+                icol++;
             }
         }
 
@@ -277,38 +278,37 @@ std::optional<std::unique_ptr<IKSolver>> makeGradientDecentSolver(
   const auto& name = params.solver_class_name;
   if (name == "gd")
     return std::make_unique<IKGradientDescent<' ', 1>>(params);
-  else if (name == "gd_2")
+  if (name == "gd_2")
     return std::make_unique<IKGradientDescent<' ', 2>>(params);
-  else if (name == "gd_4")
+  if (name == "gd_4")
     return std::make_unique<IKGradientDescent<' ', 4>>(params);
-  else if (name == "gd_8")
+  if (name == "gd_8")
     return std::make_unique<IKGradientDescent<' ', 8>>(params);
-  else if (name == "gd_r")
+  if (name == "gd_r")
     return std::make_unique<IKGradientDescent<'r', 1>>(params);
-  else if (name == "gd_r_2")
+  if (name == "gd_r_2")
     return std::make_unique<IKGradientDescent<'r', 2>>(params);
-  else if (name == "gd_r_4")
+  if (name == "gd_r_4")
     return std::make_unique<IKGradientDescent<'r', 4>>(params);
-  else if (name == "gd_r_8")
+  if (name == "gd_r_8")
     return std::make_unique<IKGradientDescent<'r', 8>>(params);
-  else if (name == "gd_c")
+  if (name == "gd_c")
     return std::make_unique<IKGradientDescent<'c', 1>>(params);
-  else if (name == "gd_c_2")
+  if (name == "gd_c_2")
     return std::make_unique<IKGradientDescent<'c', 2>>(params);
-  else if (name == "gd_c_4")
+  if (name == "gd_c_4")
     return std::make_unique<IKGradientDescent<'c', 4>>(params);
-  else if (name == "gd_c_8")
+  if (name == "gd_c_8")
     return std::make_unique<IKGradientDescent<'c', 8>>(params);
-  else if (name == "jac")
+  if (name == "jac")
     return std::make_unique<IKJacobian<1>>(params);
-  else if (name == "jac_2")
+  if (name == "jac_2")
     return std::make_unique<IKJacobian<2>>(params);
-  else if (name == "jac_4")
+  if (name == "jac_4")
     return std::make_unique<IKJacobian<4>>(params);
-  else if (name == "jac_8")
+  if (name == "jac_8")
     return std::make_unique<IKJacobian<8>>(params);
-  else
-    return std::nullopt;
+  return std::nullopt;
 }
 
 }

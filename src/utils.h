@@ -384,7 +384,7 @@ template <class T, size_t A> struct aligned_allocator : public std::allocator<T>
     typedef T& reference;
     typedef const T& const_reference;
     typedef T value_type;
-    T* allocate(size_t s, [[maybe_unused]] const void* hint = 0)
+    T* allocate(size_t s, const void* /*hint*/ = 0)
     {
         void* p;
         if(posix_memalign(&p, A, sizeof(T) * s + 64)) throw std::bad_alloc();

@@ -130,10 +130,9 @@ struct BioIKKinematicsPlugin : kinematics::KinematicsBase {
     return link_names;
   }
 
-  virtual bool getPositionFK(
-    [[maybe_unused]] const std::vector<std::string> &,
-    [[maybe_unused]] const std::vector<double> &,
-    [[maybe_unused]] std::vector<geometry_msgs::msg::Pose> &) const override {
+  virtual bool getPositionFK(const std::vector<std::string> &,
+                             const std::vector<double> &,
+                             std::vector<geometry_msgs::msg::Pose> &) const override {
     LOG_FNC();
     return false;
   }
@@ -141,12 +140,11 @@ struct BioIKKinematicsPlugin : kinematics::KinematicsBase {
   // Using the non-pure virtual getPositionIK and not overriding.
   using kinematics::KinematicsBase::getPositionIK;
 
-  virtual bool getPositionIK(
-      [[maybe_unused]] const geometry_msgs::msg::Pose &,
-      [[maybe_unused]] const std::vector<double> &,
-      [[maybe_unused]] std::vector<double> &,
-      [[maybe_unused]] moveit_msgs::msg::MoveItErrorCodes &,
-      [[maybe_unused]] const kinematics::KinematicsQueryOptions &) const {
+  virtual bool getPositionIK(const geometry_msgs::msg::Pose &,
+                             const std::vector<double> &,
+                             std::vector<double> &,
+                             moveit_msgs::msg::MoveItErrorCodes &,
+                             const kinematics::KinematicsQueryOptions &) const {
     LOG_FNC();
     return false;
   }
@@ -376,7 +374,7 @@ struct BioIKKinematicsPlugin : kinematics::KinematicsBase {
   virtual bool
   searchPositionIK(const std::vector<geometry_msgs::msg::Pose> &ik_poses,
                    const std::vector<double> &ik_seed_state, double timeout,
-                   [[maybe_unused]] const std::vector<double> &consistency_limits,
+                   const std::vector<double> &/*consistency_limits*/,
                    std::vector<double> &solution,
                    const IKCallbackFn &solution_callback,
                    moveit_msgs::msg::MoveItErrorCodes &error_code,
@@ -588,8 +586,8 @@ struct BioIKKinematicsPlugin : kinematics::KinematicsBase {
   }
 
   virtual bool supportsGroup(
-      [[maybe_unused]] const moveit::core::JointModelGroup *jmg,
-      [[maybe_unused]] std::string *error_text_out = 0) const override {
+      const moveit::core::JointModelGroup */*jmg*/,
+      std::string */*error_text_out*/ = 0) const override {
     LOG_FNC();
     // LOG_VAR(jmg->getName());
     return true;

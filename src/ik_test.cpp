@@ -139,8 +139,7 @@ std::optional<std::unique_ptr<IKSolver>> makeTestSolver(
   const auto& name = params.solver_class_name;
   if (name == "test")
     return std::make_unique<IKTest>(params);
-  else
-    return std::nullopt;
+  return std::nullopt;
 }
 
 }
