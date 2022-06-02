@@ -125,6 +125,19 @@ struct BioIKKinematicsQueryOptions : kinematics::KinematicsQueryOptions
     bool replace;
     mutable double solution_fitness;
     BioIKKinematicsQueryOptions();
+    BioIKKinematicsQueryOptions(const BioIKKinematicsQueryOptions& options)
+    {
+        for (const auto& g : options.goals)
+        {
+            goals.push_back(std::make_unique<Goal>(*g));
+        }
+        for (const auto& j : options.fixed_joints)
+        {
+            fixed_joints.push_back(j);
+        }
+        replace = options.replace;
+        solution_fitness = options.solution_fitness;
+    }
     ~BioIKKinematicsQueryOptions();
 };
 }
