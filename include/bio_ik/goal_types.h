@@ -49,6 +49,10 @@
 
 #include <geometric_shapes/bodies.h>
 #include <geometric_shapes/shapes.h>
+#include <moveit/robot_model/robot_model.h>
+#include <moveit/robot_state/robot_state.h>
+
+#include <unsupported/Eigen/MatrixFunctions>
 
 namespace bio_ik
 {
@@ -679,5 +683,32 @@ public:
         sum += w * w * (position - fb.getPosition()).length2();
         return sum;
     }
+};
+
+// Custom Goal based on:
+// A Riemannian Metric for Geometry-Aware Singularity Avoidance by Articulated Robots
+class SingularityGoal : public bio_ik::Goal
+{
+public:
+  double evaluate(const bio_ik::GoalContext& context) const override
+  {
+    moveit::core::RobotState robot_state(
+        moveit::core::RobotModelConstPtr(&context.getRobotModel(), [](const moveit::core::RobotModel*) {}));
+    robot_state.setToDefaultValues();
+    for (size_t i = 0; i < context.getProblemVariableCount(); ++i)
+      robot_state.setVariablePosition(i, context.getProblemVariablePosition(i));
+
+    robot_state.update();
+
+    Eigen::MatrixXd jacobian = robot_state.getJacobian(&context.getJointModelGroup());
+
+    Eigen::MatrixXd sigma12 =
+        jacobian.jacobiSvd(Eigen::ComputeThinU | Eigen::ComputeThinV).singularValues().asDiagonal();
+    sigma12 = sigma12.pow(-1.0 / 2.0);
+    double xi = (sigma12 * jacobian * jacobian.transpose() * sigma12).log().norm();
+    std::cout << "foo: " << xi * xi << std::endl;
+
+    return xi * xi;
+  }
 };
 }
