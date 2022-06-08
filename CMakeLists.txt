@@ -172,16 +172,13 @@ target_link_libraries(
   PRIVATE
     project_options
     project_warnings
-    bio_ik
-
-    -static-libgcc
-    -static-libstdc++
+    ${PROJECT_NAME}
 )
 
 
 install(
   DIRECTORY include/
-  DESTINATION include/${PROJECT_NAME}
+  DESTINATION include/
 )
 install(
   TARGETS ${PROJECT_NAME} ${PROJECT_NAME}_plugin
@@ -194,7 +191,7 @@ install(
 
 
 pluginlib_export_plugin_description_file(
-  ${PROJECT_NAME}_plugin
+  moveit_core
   bio_ik_kinematics_description.xml
 )
 

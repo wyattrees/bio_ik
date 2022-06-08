@@ -169,7 +169,7 @@ struct IKEvolution1 : IKBase
         return angular_scale;*/
     }
 
-    double getHeuristicError(size_t variable_index, [[maybe_unused]] bool balanced)
+    double getHeuristicError(size_t variable_index, bool /*balanced*/)
     {
         // return 1;
 
@@ -562,8 +562,7 @@ std::optional<std::unique_ptr<IKSolver>> makeEvolution1Solver(
   const auto& name = params.solver_class_name;
   if (name == "bio1")
     return std::make_unique<IKEvolution1>(params);
-  else
-    return std::nullopt;
+  return std::nullopt;
 }
 
 }

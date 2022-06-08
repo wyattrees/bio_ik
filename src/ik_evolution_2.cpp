@@ -33,6 +33,7 @@
  *********************************************************************/
 
 #include <bio_ik/ik_base.hpp>
+#include <bio_ik/ik_evolution_2.hpp>
 
 #ifdef ENABLE_CPP_OPTLIB
 #include "cppoptlib/solver/lbfgssolver.h"
@@ -237,11 +238,8 @@ template <int memetic> struct IKEvolution2 : IKBase
     */
 
     // aligned_vector<double> rmask;
-#pragma GCC push_options
-#pragma GCC optimize ("unroll-loops")
     // create offspring and mutate
     __attribute__((hot)) __attribute__((noinline))
-    __attribute__((optimize("unroll-loops")))
     //__attribute__((target_clones("avx2", "avx", "sse2", "default")))
     //__attribute__((target("avx")))
     void
@@ -274,7 +272,6 @@ template <int memetic> struct IKEvolution2 : IKBase
             auto __attribute__((aligned(32)))* __restrict__ parent_genes = parent.genes.data();
             auto __attribute__((aligned(32)))* __restrict__ parent_gradients = parent.gradients.data();
 
-            [[maybe_unused]] auto __attribute__((aligned(32)))* __restrict__ parent2_genes = parent2.genes.data();
             auto __attribute__((aligned(32)))* __restrict__ parent2_gradients = parent2.gradients.data();
 
             auto& child = children[child_index];
@@ -282,7 +279,7 @@ template <int memetic> struct IKEvolution2 : IKBase
             auto __attribute__((aligned(32)))* __restrict__ child_genes = child.genes.data();
             auto __attribute__((aligned(32)))* __restrict__ child_gradients = child.gradients.data();
 
-#pragma omp simd aligned(genes_span : 32), aligned(genes_min : 32), aligned(genes_max : 32), aligned(parent_genes : 32), aligned(parent_gradients : 32), aligned(parent2_genes : 32), aligned(parent2_gradients : 32), aligned(child_genes : 32), aligned(child_gradients : 32) aligned(rr : 32)
+#pragma omp simd aligned(genes_span : 32), aligned(genes_min : 32), aligned(genes_max : 32), aligned(parent_genes : 32), aligned(parent_gradients : 32), aligned(parent2_gradients : 32), aligned(child_genes : 32), aligned(child_gradients : 32) aligned(rr : 32)
             for(size_t gene_index = 0; gene_index < gene_count; gene_index++)
             {
                 // double mutation_rate = (1 << fast_random_index(16)) * (1.0 / (1 << 23));
@@ -326,7 +323,6 @@ template <int memetic> struct IKEvolution2 : IKBase
             }
         }
     }
-#pragma GCC pop_options
 
     void step()
     {
@@ -655,12 +651,11 @@ std::optional<std::unique_ptr<IKSolver>> makeEvolution2Solver(
   const auto& name = params.solver_class_name;
   if (name == "bio2")
     return std::make_unique<IKEvolution2<0>>(params);
-  else if (name == "bio2_memetic")
+  if (name == "bio2_memetic")
     return std::make_unique<IKEvolution2<'q'>>(params);
-  else if (name == "bio2_memetic_l")
+  if (name == "bio2_memetic_l")
     return std::make_unique<IKEvolution2<'l'>>(params);
-  else
-    return std::nullopt;
+  return std::nullopt;
 }
 
 #ifdef ENABLE_CPP_OPTLIB

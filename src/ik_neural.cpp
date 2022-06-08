@@ -690,8 +690,7 @@ std::optional<std::unique_ptr<IKSolver>> makeEvolution1Solver(
   const auto& name = params.solver_class_name;
   if (name == "neural2")
     return std::make_unique<IKNeural2>(params);
-  else
-    return std::nullopt;
+  return std::nullopt;
 }
 
 }

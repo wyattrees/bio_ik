@@ -115,7 +115,7 @@ public:
         context.setSecondary(secondary_);
         context.setWeight(weight_);
     }
-    virtual double evaluate([[maybe_unused]] const GoalContext& context) const { return 0; }
+    virtual double evaluate(const GoalContext& /*context*/) const { return 0; }
 };
 
 struct BioIKKinematicsQueryOptions : kinematics::KinematicsQueryOptions

@@ -131,9 +131,9 @@ struct BioIKKinematicsPlugin : kinematics::KinematicsBase {
   }
 
   virtual bool getPositionFK(
-    [[maybe_unused]] const std::vector<std::string> &,
-    [[maybe_unused]] const std::vector<double> &,
-    [[maybe_unused]] std::vector<geometry_msgs::msg::Pose> &) const override {
+    const std::vector<std::string> &,
+    const std::vector<double> &,
+    std::vector<geometry_msgs::msg::Pose> &) const override {
     LOG_FNC();
     return false;
   }
@@ -142,11 +142,11 @@ struct BioIKKinematicsPlugin : kinematics::KinematicsBase {
   using kinematics::KinematicsBase::getPositionIK;
 
   virtual bool getPositionIK(
-      [[maybe_unused]] const geometry_msgs::msg::Pose &,
-      [[maybe_unused]] const std::vector<double> &,
-      [[maybe_unused]] std::vector<double> &,
-      [[maybe_unused]] moveit_msgs::msg::MoveItErrorCodes &,
-      [[maybe_unused]] const kinematics::KinematicsQueryOptions &) const {
+      const geometry_msgs::msg::Pose &,
+      const std::vector<double> &,
+      std::vector<double> &,
+      moveit_msgs::msg::MoveItErrorCodes &,
+      const kinematics::KinematicsQueryOptions &) const {
     LOG_FNC();
     return false;
   }
@@ -164,12 +164,13 @@ struct BioIKKinematicsPlugin : kinematics::KinematicsBase {
   template <class T>
   void getRosParam(const std::string &param, T &val, const T &default_val)
   {
-    if (!node_->has_parameter(param))
+    const std::string prefix = "robot_description_kinematics." + group_name_ + ".";
+    if (!node_->has_parameter(prefix + param))
     {
-      val = node_->declare_parameter(param, rclcpp::ParameterValue(default_val)).get<T>();
+      val = node_->declare_parameter(prefix + param, rclcpp::ParameterValue{default_val}).get<T>();
       return;
     }
-    val = node_->get_parameter(param).get_value<T>();
+    val = node_->get_parameter(prefix + param).get_value<T>();
   }
 
   bool load(std::string group_name) {
@@ -376,7 +377,7 @@ struct BioIKKinematicsPlugin : kinematics::KinematicsBase {
   virtual bool
   searchPositionIK(const std::vector<geometry_msgs::msg::Pose> &ik_poses,
                    const std::vector<double> &ik_seed_state, double timeout,
-                   [[maybe_unused]] const std::vector<double> &consistency_limits,
+                   const std::vector<double> &/*consistency_limits*/,
                    std::vector<double> &solution,
                    const IKCallbackFn &solution_callback,
                    moveit_msgs::msg::MoveItErrorCodes &error_code,
@@ -588,8 +589,8 @@ struct BioIKKinematicsPlugin : kinematics::KinematicsBase {
   }
 
   virtual bool supportsGroup(
-      [[maybe_unused]] const moveit::core::JointModelGroup *jmg,
-      [[maybe_unused]] std::string *error_text_out = 0) const override {
+      const moveit::core::JointModelGroup */*jmg*/,
+      std::string */*error_text_out*/ = 0) const override {
     LOG_FNC();
     // LOG_VAR(jmg->getName());
     return true;

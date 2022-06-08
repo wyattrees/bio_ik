@@ -598,9 +598,8 @@ public:
         }
     }
     void computeJacobian(const std::vector<size_t>& variable_indices,
-                       Eigen::MatrixXd& jacobian) {
+                         Eigen::MatrixXd& jacobian) {
     double step_size = 0.00001;
-    // double half_step_size = step_size * 0.5;
     double inv_step_size = 1.0 / step_size;
     auto tip_count = tip_frames.size();
     jacobian.resize(static_cast<Eigen::Index>(tip_count * 6),
@@ -616,8 +615,8 @@ public:
             jacobian(itip * 6 + 4, icol) = 0;
             jacobian(itip * 6 + 5, icol) = 0;
         }
-        }
-        for (size_t icol = 0; icol < variable_indices.size(); icol++) {
+    }
+    for (size_t icol = 0; icol < variable_indices.size(); icol++) {
         auto ivar = variable_indices[icol];
         auto* var_joint_model =
             robot_model_->getJointOfVariable(static_cast<int>(ivar));
@@ -1519,7 +1518,7 @@ public:
         for(size_t i = 0; i < tipFrames_.size(); i++)
             tipFrames_[i] = Frame(robot_state_.getGlobalLinkTransform(tipLinks_[i]));
     }
-    inline void incrementalBegin([[maybe_unused]] const std::vector<double>& jj) {}
+    inline void incrementalBegin(const std::vector<double>& /*jj*/) {}
     inline void incrementalEnd() {}
     const Frame& getTipFrame(size_t fi) const { return tipFrames_[fi]; }
     const std::vector<Frame>& getTipFrames() const { return tipFrames_; }

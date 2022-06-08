@@ -108,8 +108,7 @@ void Problem::initialize(moveit::core::RobotModelConstPtr robot_model, const mov
             {
                 if(fixed_joint_name == joint_name)
                 {
-                    return static_cast<ssize_t>(-1) -
-                           static_cast<ssize_t>(robot_model->getVariableIndex(name));
+                    return -1 - static_cast<ssize_t>(robot_model->getVariableIndex(name));
                 }
             }
         }

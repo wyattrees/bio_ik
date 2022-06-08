@@ -51,6 +51,7 @@ typedef tf2::Vector3 Vector3;
 struct alignas(32) Frame
 {
     Vector3 pos;
+    // TODO(wyattrees): is __padding needed? rename without double underscore?
     std::array<double, 4 - (sizeof(Vector3) / sizeof(double))> __padding;
     Quaternion rot;
     inline Frame() {}
@@ -103,8 +104,7 @@ inline void frameToKDL(const Frame& frame, KDL::Frame& kdl_frame)
 
 template <size_t i> const Frame Frame::IdentityFrameTemplate<i>::identity_frame(Vector3(0, 0, 0), Quaternion(0, 0, 0, 1));
 
-[[maybe_unused]]
-static std::ostream& operator<<(std::ostream& os, const Frame& f) { return os << "(" << f.pos.x() << "," << f.pos.y() << "," << f.pos.z() << ";" << f.rot.x() << "," << f.rot.y() << "," << f.rot.z() << "," << f.rot.w() << ")"; }
+inline std::ostream& operator<<(std::ostream& os, const Frame& f) { return os << "(" << f.pos.x() << "," << f.pos.y() << "," << f.pos.z() << ";" << f.rot.x() << "," << f.rot.y() << "," << f.rot.z() << "," << f.rot.w() << ")"; }
 
 __attribute__((always_inline)) inline void quat_mul_vec(const tf2::Quaternion& q, const tf2::Vector3& v, tf2::Vector3& r)
 {

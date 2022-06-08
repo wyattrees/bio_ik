@@ -94,14 +94,13 @@ public:
 std::optional<std::unique_ptr<IKSolver>> makeSolver(const IKParams& params) {
   if (auto evolution_1 = makeEvolution1Solver(params))
     return evolution_1;
-  else if (auto evolution_2 = makeEvolution2Solver(params))
+  if (auto evolution_2 = makeEvolution2Solver(params))
     return evolution_2;
-  else if (auto gradient = makeGradientDecentSolver(params))
+  if (auto gradient = makeGradientDecentSolver(params))
     return gradient;
-  else if (auto test = makeTestSolver(params))
+  if (auto test = makeTestSolver(params))
     return test;
-  else
-    return std::nullopt;
+  return std::nullopt;
 }
 
 // runs ik on multiple threads until a stop criterion is met
@@ -176,13 +175,13 @@ private:
         THREADPROFILER("thread", i);
         COUNTERPROFILER("solver threads");
 
-        // initialize ik solvers_
+        // initialize ik solvers
         {
             BLOCKPROFILER("ik solver init");
             solvers_[i]->initialize(problem_);
         }
 
-        // run solver iterations until solution found or timeout_
+        // run solver iterations until solution found or timeout
         for(size_t iteration = 0; (std::chrono::system_clock::now() < timeout_ && finished_ == 0) || (iteration == 0 && i == 0); iteration++)
         {
             if(finished_) break;
@@ -261,7 +260,7 @@ public:
                 else
                 {
                     // ... and if secondary goals have been specified,
-                    // select the result_ that best satisfies primary and secondary goals
+                    // select the result that best satisfies primary and secondary goals
                     fitness = solver_fitness_[i] + solvers_[0]->computeSecondaryFitnessAllVariables(solver_solutions_[i]);
                 }
                 if(fitness < best_fitness_)
