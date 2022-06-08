@@ -178,7 +178,7 @@ target_link_libraries(
 
 install(
   DIRECTORY include/
-  DESTINATION include/
+  DESTINATION include
 )
 install(
   TARGETS ${PROJECT_NAME} ${PROJECT_NAME}_plugin

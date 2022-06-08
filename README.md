@@ -118,9 +118,9 @@ or used interactively from rviz using the MotionPlanning GUI plugin.
     kinematics_solver_attempts: 1
   ```
 
-  To use a solver class besides the default `bio2_memetic`, the ROS param `mode` must be set to one
-  of the options [below](#disabling-global-optimization) (e.g. 'gd_c'). To do so for the Quickstart
-  in Rviz tutorial, edit the rviz node within `<colcon workspace>/src/moveit2_tutorials/doc/tutorials/quickstart_in_rviz/launch/demo.launch.py` as such:
+  To use a solver class besides the default `bio2_memetic`, the ROS param `robot_description_kinematics.panda_arm.mode` must be set to one
+  of the options [below](#disabling-global-optimization) (e.g. 'gd_c'). For a different robot, replace `panda_arm` in the parameter with your robot's group name.
+  To make this change for the Quickstart in Rviz tutorial, edit the rviz node within `<colcon workspace>/src/moveit2_tutorials/doc/tutorials/quickstart_in_rviz/launch/demo.launch.py` as such:
 
   ```python
   rviz_node_tutorial = Node(
@@ -134,7 +134,7 @@ or used interactively from rviz using the MotionPlanning GUI plugin.
         robot_description_semantic,
         ompl_planning_pipeline_config,
         kinematics_yaml,
-        {"mode": "gd_c"} # use gd_c solver instead of default "bio2_memetic"
+        {"robot_description_kinematics.panda_arm.mode": "gd_c"} # use gd_c solver instead of default "bio2_memetic"
     ],
     condition=IfCondition(tutorial_mode),
   )
@@ -148,7 +148,8 @@ or used interactively from rviz using the MotionPlanning GUI plugin.
 * You are now ready to use bio_ik from your C/C++ and Python programs,
   using the standard Moveit API.
   To explicitly request an IK solution in C++:
-  ```
+
+  ```c++
     robot_model_loader::RobotModelLoader robot_model_loader(robot);
 
     auto robot_model = robot_model_loader.getModel();
@@ -160,15 +161,16 @@ or used interactively from rviz using the MotionPlanning GUI plugin.
 
     robot_state::RobotState robot_state_ik(robot_model);
 
-    // traditional "basic" bio_ik usage. The end-effector goal poses
-    // and end-effector link names are passed into the setFromIK()
-    // call. The KinematicsQueryOptions are empty.
-    //
+    const geometry_msgs::msg::Pose pose;
+
+    // Several overloads for setFromIK are available
+    // here, we plass the joint model group, desired pose, and a timeout.
+    // We can leave the callback and options empty.
+    // Several desired poses can be passed with a separate overload
     bool ok = robot_state_ik.setFromIK(
                 joint_model_group, // joints to be used for IK
-                tip_transforms,    // multiple end-effector goal poses
-                tip_names,         // names of the end-effector links
-                attempts, timeout, // solver attempts and timeout
+                pose,    // end-effector goal pose
+                timeout, // solver attempts and timeout
                 moveit::core::GroupStateValidityCallbackFn(),
                 opts               // mostly empty
               );
