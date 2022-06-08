@@ -32,14 +32,9 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  *********************************************************************/
 
-#include <bio_ik/ik_base.hpp>
-#include <bio_ik/ik_evolution_1.hpp>
-#include <bio_ik/ik_evolution_2.hpp>
-#include <bio_ik/ik_test.hpp>
-#include <bio_ik/ik_gradient.hpp>
+#include "ik_base.h"
 
 #include <boost/thread/barrier.hpp>
-#include <optional>
 
 namespace bio_ik
 {
@@ -91,17 +86,6 @@ public:
     }
 };
 
-std::optional<std::unique_ptr<IKSolver>> makeSolver(const IKParams& params) {
-  if (auto evolution_1 = makeEvolution1Solver(params))
-    return evolution_1;
-  if (auto evolution_2 = makeEvolution2Solver(params))
-    return evolution_2;
-  if (auto gradient = makeGradientDecentSolver(params))
-    return gradient;
-  if (auto test = makeTestSolver(params))
-    return test;
-  return std::nullopt;
-}
 
 // runs ik on multiple threads until a stop criterion is met
 struct IKParallel
@@ -133,21 +117,13 @@ struct IKParallel
         enable_counter_ = params_.enable_counter;
 
         // create solvers
-        auto create_solver = [&params]() {
-            auto result = makeSolver(params);
-            if (!result) {
-                throw std::runtime_error("Invalid Solver Name: " +
-                                        params.solver_class_name);
-            }
-            return std::move(*result);
-        };
-        solvers_.emplace_back(create_solver());
+        solvers_.emplace_back(IKFactory::create(name, params));
         thread_count_ = solvers_.front()->concurrency();
         if(params_.thread_count) {
             thread_count_ = params_.thread_count;
         }
         while(solvers_.size() < thread_count_)
-            solvers_.emplace_back(create_solver());
+            solvers_.emplace_back(IKFactory::clone(solvers_.front().get()));
         for(size_t i = 0; i < thread_count_; i++)
             solvers_[i]->thread_index_ = i;
 

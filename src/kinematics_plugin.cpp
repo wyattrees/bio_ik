@@ -32,13 +32,13 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  *********************************************************************/
 
-#include <bio_ik/goal.hpp>
+#include <bio_ik/goal.h>
 
-#include <bio_ik/forward_kinematics.hpp>
-#include <bio_ik/ik_base.hpp>
-#include <bio_ik/ik_parallel.hpp>
-#include <bio_ik/problem.hpp>
-#include <bio_ik/utils.hpp>
+#include "forward_kinematics.h"
+#include "ik_base.h"
+#include "ik_parallel.h"
+#include "problem.h"
+#include "utils.h"
 
 #include <Eigen/Core>
 #include <Eigen/Dense>
@@ -65,7 +65,7 @@
 #include <tuple>
 #include <type_traits>
 
-#include <bio_ik/goal_types.hpp>
+#include <bio_ik/goal_types.h>
 
 using namespace bio_ik;
 
@@ -108,7 +108,6 @@ toBioIKKinematicsQueryOptions(const void *ptr) {
 namespace bio_ik_kinematics_plugin {
 
 struct BioIKKinematicsPlugin : kinematics::KinematicsBase {
-  rclcpp::Node::SharedPtr node_;
   std::vector<std::string> joint_names, link_names;
   const moveit::core::JointModelGroup *joint_model_group;
   mutable std::unique_ptr<IKParallel> ik;

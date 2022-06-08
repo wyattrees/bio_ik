@@ -34,12 +34,12 @@
 
 #pragma once
 
-#include <bio_ik/goal.hpp>
+#include <bio_ik/goal.h>
 
-#include <bio_ik/forward_kinematics.hpp>
-#include <bio_ik/problem.hpp>
-#include <bio_ik/utils.hpp>
-#include <bio_ik/robot_info.hpp>
+#include "forward_kinematics.h"
+#include "problem.h"
+#include "utils.h"
+#include <bio_ik/robot_info.h>
 
 #include <random>
 
@@ -210,4 +210,6 @@ struct IKBase : Random
 };
 
 typedef IKBase IKSolver;
+
+typedef Factory<IKSolver, const IKParams&> IKFactory;
 }

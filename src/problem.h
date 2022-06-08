@@ -36,9 +36,9 @@
 
 #include <vector>
 
-#include <bio_ik/utils.hpp>
-#include <bio_ik/robot_info.hpp>
-#include <bio_ik/goal.hpp>
+#include "utils.h"
+#include <bio_ik/robot_info.h>
+#include <bio_ik/goal.h>
 
 #include <geometric_shapes/shapes.h>
 

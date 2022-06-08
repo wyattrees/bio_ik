@@ -32,7 +32,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  *********************************************************************/
 
-#include <bio_ik/ik_base.hpp>
+#include "ik_base.h"
 
 #include <fann.h>
 #include <fann_cpp.h>
@@ -685,12 +685,6 @@ struct IKNeural2 : IKBase
         }
     }
 };
-std::optional<std::unique_ptr<IKSolver>> makeEvolution1Solver(
-    const IKParams& params) {
-  const auto& name = params.solver_class_name;
-  if (name == "neural2")
-    return std::make_unique<IKNeural2>(params);
-  return std::nullopt;
-}
 
+static IKFactory::Class<IKNeural2> neural2("neural2");
 }

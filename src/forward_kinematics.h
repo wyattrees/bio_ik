@@ -34,9 +34,9 @@
 
 #pragma once
 
-#include <bio_ik/utils.hpp>
-#include <bio_ik/goal.hpp>
-#include <bio_ik/robot_info.hpp>
+#include "utils.h"
+#include <bio_ik/goal.h>
+#include <bio_ik/robot_info.h>
 #include <kdl/treefksolverpos_recursive.hpp>
 #include <kdl_parser/kdl_parser.hpp>
 

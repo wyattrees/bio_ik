@@ -374,6 +374,69 @@ public:
     }
 };
 
+// class factory
+//
+// registering a class:
+//   static Factory<Base>::Class<Derived> reg("Derived");
+//
+// instantiation:
+//   Base* obj = Factory<Base>::create("Derived");
+//
+// cloning and object:
+//   p = Factory<Base>::clone(o);
+//
+template <class BASE, class... ARGS> class Factory
+{
+    typedef BASE* (*Constructor)(ARGS...);
+    struct ClassBase
+    {
+        std::string name;
+        std::type_index type;
+        virtual BASE* create(ARGS... args) const = 0;
+        virtual BASE* clone(const BASE*) const = 0;
+        ClassBase()
+            : type(typeid(void))
+        {
+        }
+        virtual ~ClassBase() = default;
+    };
+    typedef std::set<ClassBase*> MapType;
+    static MapType& classes()
+    {
+        static MapType ff;
+        return ff;
+    }
+
+public:
+    template <class DERIVED> struct Class : ClassBase
+    {
+        BASE* create(ARGS... args) const { return new DERIVED(args...); }
+        BASE* clone(const BASE* o) const { return new DERIVED(*dynamic_cast<const DERIVED*>(o)); }
+        Class(const std::string& class_name)
+        {
+            // TODO(wyattrees): is the member name "name" important or can change to "name_"?
+            this->name = class_name;
+            this->type = typeid(DERIVED);
+            classes().insert(this);
+        }
+        ~Class() { classes().erase(this); }
+    };
+
+    static BASE* create(const std::string& class_name, ARGS... args)
+    {
+        // TODO(wyattrees): is the member name "name" important or can change to "name_"?
+        for(auto* f : classes())
+            if(f->name == class_name) return f->create(args...);
+        ERROR("class not found", class_name);
+    }
+    template <class DERIVED> static DERIVED* clone(const DERIVED* o)
+    {
+        for(auto* f : classes())
+            if(f->type == typeid(*o)) return dynamic_cast<DERIVED*>(f->clone(o));
+        ERROR("class not found", typeid(*o).name());
+    }
+};
+
 // Alloctes memory properly aligned for SIMD operations
 template <class T, size_t A> struct aligned_allocator : public std::allocator<T>
 {

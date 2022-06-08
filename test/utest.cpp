@@ -27,7 +27,7 @@
  *  BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
  *  LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
  *  CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
- *  LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ *  LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISIWNG IN
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  *********************************************************************/
@@ -37,8 +37,8 @@
 #include <gtest/gtest.h>
 #include <random>
 
-#include <bio_ik/utils.hpp>
-#include <bio_ik/frame.hpp>
+#include "../src/utils.h"
+#include <bio_ik/frame.h>
 
 using namespace bio_ik;
 

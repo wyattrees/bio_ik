@@ -32,7 +32,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  *********************************************************************/
 
-#include <bio_ik/ik_base.hpp>
+#include "ik_base.h"
 
 namespace bio_ik
 {
@@ -133,13 +133,5 @@ struct IKTest : IKBase
     const std::vector<double>& getSolution() const { return problem_.initial_guess; }
 };
 
-std::optional<std::unique_ptr<IKSolver>> makeTestSolver(
-    const IKParams& params) {
-  const auto& name = params.solver_class_name;
-  if (name == "test")
-    return std::make_unique<IKTest>(params);
-  else
-    return std::nullopt;
-}
-
+static IKFactory::Class<IKTest> test("test");
 }

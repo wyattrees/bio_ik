@@ -32,7 +32,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  *********************************************************************/
 
-#include <bio_ik/goal_types.hpp>
+#include <bio_ik/goal_types.h>
 
 #include <geometric_shapes/bodies.h>
 #include <geometric_shapes/shapes.h>

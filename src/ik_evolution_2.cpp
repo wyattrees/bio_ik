@@ -32,8 +32,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  *********************************************************************/
 
-#include <bio_ik/ik_base.hpp>
-#include <bio_ik/ik_evolution_2.hpp>
+#include "ik_base.h"
 
 #ifdef ENABLE_CPP_OPTLIB
 #include "cppoptlib/solver/lbfgssolver.h"
@@ -646,17 +645,9 @@ template <int memetic> struct IKEvolution2 : IKBase
     virtual size_t concurrency() const { return 4; }
 };
 
-std::optional<std::unique_ptr<IKSolver>> makeEvolution2Solver(
-    const IKParams& params) {
-  const auto& name = params.solver_class_name;
-  if (name == "bio2")
-    return std::make_unique<IKEvolution2<0>>(params);
-  if (name == "bio2_memetic")
-    return std::make_unique<IKEvolution2<'q'>>(params);
-  if (name == "bio2_memetic_l")
-    return std::make_unique<IKEvolution2<'l'>>(params);
-  return std::nullopt;
-}
+static IKFactory::Class<IKEvolution2<0>> bio2("bio2");
+static IKFactory::Class<IKEvolution2<'q'>> bio2_memetic("bio2_memetic");
+static IKFactory::Class<IKEvolution2<'l'>> bio2_memetic_l("bio2_memetic_l");
 
 #ifdef ENABLE_CPP_OPTLIB
 static IKFactory::Class<IKEvolution2<'o'>> bio2_memetic_0("bio2_memetic_lbfgs");

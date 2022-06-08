@@ -32,7 +32,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  *********************************************************************/
 
-#include <bio_ik/ik_base.hpp>
+#include "ik_base.h"
 
 namespace bio_ik
 {
@@ -248,6 +248,21 @@ template <int if_stuck, size_t threads> struct IKGradientDescent : IKBase
     size_t concurrency() const { return threads; }
 };
 
+static IKFactory::Class<IKGradientDescent<' ', 1>> gd("gd");
+static IKFactory::Class<IKGradientDescent<' ', 2>> gd_2("gd_2");
+static IKFactory::Class<IKGradientDescent<' ', 4>> gd_4("gd_4");
+static IKFactory::Class<IKGradientDescent<' ', 8>> gd_8("gd_8");
+
+static IKFactory::Class<IKGradientDescent<'r', 1>> gd_r("gd_r");
+static IKFactory::Class<IKGradientDescent<'r', 2>> gd_2_r("gd_r_2");
+static IKFactory::Class<IKGradientDescent<'r', 4>> gd_4_r("gd_r_4");
+static IKFactory::Class<IKGradientDescent<'r', 8>> gd_8_r("gd_r_8");
+
+static IKFactory::Class<IKGradientDescent<'c', 1>> gd_c("gd_c");
+static IKFactory::Class<IKGradientDescent<'c', 2>> gd_2_c("gd_c_2");
+static IKFactory::Class<IKGradientDescent<'c', 4>> gd_4_c("gd_c_4");
+static IKFactory::Class<IKGradientDescent<'c', 8>> gd_8_c("gd_c_8");
+
 // pseudoinverse jacobian only
 template <size_t threads> struct IKJacobian : IKJacobianBase<IKBase>
 {
@@ -269,43 +284,8 @@ template <size_t threads> struct IKJacobian : IKJacobianBase<IKBase>
     void step() { optimizeJacobian(solution); }
     size_t concurrency() const { return threads; }
 };
-
-std::optional<std::unique_ptr<IKSolver>> makeGradientDecentSolver(
-    const IKParams& params) {
-  const auto& name = params.solver_class_name;
-  if (name == "gd")
-    return std::make_unique<IKGradientDescent<' ', 1>>(params);
-  if (name == "gd_2")
-    return std::make_unique<IKGradientDescent<' ', 2>>(params);
-  if (name == "gd_4")
-    return std::make_unique<IKGradientDescent<' ', 4>>(params);
-  if (name == "gd_8")
-    return std::make_unique<IKGradientDescent<' ', 8>>(params);
-  if (name == "gd_r")
-    return std::make_unique<IKGradientDescent<'r', 1>>(params);
-  if (name == "gd_r_2")
-    return std::make_unique<IKGradientDescent<'r', 2>>(params);
-  if (name == "gd_r_4")
-    return std::make_unique<IKGradientDescent<'r', 4>>(params);
-  if (name == "gd_r_8")
-    return std::make_unique<IKGradientDescent<'r', 8>>(params);
-  if (name == "gd_c")
-    return std::make_unique<IKGradientDescent<'c', 1>>(params);
-  if (name == "gd_c_2")
-    return std::make_unique<IKGradientDescent<'c', 2>>(params);
-  if (name == "gd_c_4")
-    return std::make_unique<IKGradientDescent<'c', 4>>(params);
-  if (name == "gd_c_8")
-    return std::make_unique<IKGradientDescent<'c', 8>>(params);
-  if (name == "jac")
-    return std::make_unique<IKJacobian<1>>(params);
-  if (name == "jac_2")
-    return std::make_unique<IKJacobian<2>>(params);
-  if (name == "jac_4")
-    return std::make_unique<IKJacobian<4>>(params);
-  if (name == "jac_8")
-    return std::make_unique<IKJacobian<8>>(params);
-  return std::nullopt;
-}
-
+static IKFactory::Class<IKJacobian<1>> jac("jac");
+static IKFactory::Class<IKJacobian<2>> jac_2("jac_2");
+static IKFactory::Class<IKJacobian<4>> jac_4("jac_4");
+static IKFactory::Class<IKJacobian<8>> jac_8("jac_8");
 }
