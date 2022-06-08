@@ -120,7 +120,7 @@ public:
 
 struct BioIKKinematicsQueryOptions : kinematics::KinematicsQueryOptions
 {
-    std::vector<std::unique_ptr<Goal>> goals;
+    std::vector<std::shared_ptr<Goal>> goals;
     std::vector<std::string> fixed_joints;
     bool replace;
     mutable double solution_fitness;
