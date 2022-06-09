@@ -99,11 +99,13 @@ class Goal
 protected:
     bool secondary_;
     double weight_;
+    double pct_factor_;
 
 public:
     Goal()
         : weight_(1)
         , secondary_(false)
+        , pct_factor_(1.0)
     {
     }
     virtual ~Goal() {}
@@ -116,11 +118,22 @@ public:
         context.setWeight(weight_);
     }
     virtual double evaluate(const GoalContext& context) const { return 0; }
+    // Change the goal such that we only want to accomplich percentage of goal.
+    // Can have different meaning depending on goal type.
+    // May not be applicable for all types of goals
+    virtual void interpolate(double percentage)
+    {
+        if (percentage <= 0.0 || percentage >=  1.0)
+        {
+            throw std::runtime_error("bio_ik goal percentage must be in [0,1]");
+        }
+        pct_factor_ = percentage;
+    }
 };
 
 struct BioIKKinematicsQueryOptions : kinematics::KinematicsQueryOptions
 {
-    std::vector<std::unique_ptr<Goal>> goals;
+    std::vector<std::shared_ptr<Goal>> goals;
     std::vector<std::string> fixed_joints;
     bool replace;
     mutable double solution_fitness;

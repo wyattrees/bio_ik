@@ -93,7 +93,7 @@ public:
     }
     inline const tf2::Vector3& getPosition() const { return position_; }
     inline void setPosition(const tf2::Vector3& position) { position_ = position; }
-    virtual double evaluate(const GoalContext& context) const { return context.getLinkFrame().getPosition().distance2(getPosition()); }
+    virtual double evaluate(const GoalContext& context) const { return pct_factor_ * context.getLinkFrame().getPosition().distance2(getPosition()); }
 };
 
 class OrientationGoal : public LinkGoalBase
@@ -116,7 +116,7 @@ public:
     {
         // return getOrientation().distance2(context.getLinkFrame().getOrientation());
         // return (getOrientation() - getOrientation().nearest(context.getLinkFrame().getOrientation())).length2();
-        return fmin((getOrientation() - context.getLinkFrame().getOrientation()).length2(), (getOrientation() + context.getLinkFrame().getOrientation()).length2());
+        return pct_factor_ * fmin((getOrientation() - context.getLinkFrame().getOrientation()).length2(), (getOrientation() + context.getLinkFrame().getOrientation()).length2());
         /*return
             (getOrientation() - context.getLinkFrame().getOrientation()).length2() *
             (getOrientation() + context.getLinkFrame().getOrientation()).length2() * 0.5;*/
@@ -176,7 +176,7 @@ public:
         // e += (getOrientation() - context.getLinkFrame().getOrientation()).length2() * (rotation_scale_ * rotation_scale_);
         // ROS_ERROR("r %f", (getOrientation() - context.getLinkFrame().getOrientation()).length2());
         // e += (getOrientation() - getOrientation().nearest(context.getLinkFrame().getOrientation())).length2() * (rotation_scale_ * rotation_scale_);
-        return e;
+        return pct_factor_ * e;
     }
 };
 
@@ -206,7 +206,7 @@ public:
         auto& fb = context.getLinkFrame();
         tf2::Vector3 axis;
         quat_mul_vec(fb.getOrientation(), axis_, axis);
-        return (target_ - fb.getPosition()).normalized().distance2(axis.normalized());
+        return pct_factor_ * (target_ - fb.getPosition()).normalized().distance2(axis.normalized());
         // return (target_ - axis * axis.dot(target_ - fb.getPosition())).distance2(fb.getPosition());
     }
 };
@@ -235,7 +235,7 @@ public:
     virtual double evaluate(const GoalContext& context) const
     {
         auto& fb = context.getLinkFrame();
-        double d = fmax(0.0, fb.getPosition().distance(target) - distance);
+        double d = fmax(0.0, fb.getPosition().distance(target) - (pct_factor_ * distance));
         return d * d;
     }
 };
@@ -264,7 +264,7 @@ public:
     virtual double evaluate(const GoalContext& context) const
     {
         auto& fb = context.getLinkFrame();
-        double d = fmax(0.0, distance - fb.getPosition().distance(target));
+        double d = fmax(0.0, (pct_factor_ * distance) - fb.getPosition().distance(target));
         return d * d;
     }
 };
@@ -293,7 +293,7 @@ public:
     virtual double evaluate(const GoalContext& context) const
     {
         auto& fb = context.getLinkFrame();
-        return position.distance2(fb.getPosition() - direction * direction.dot(fb.getPosition() - position));
+        return pct_factor_ * position.distance2(fb.getPosition() - direction * direction.dot(fb.getPosition() - position));
     }
 };
 

@@ -52,7 +52,7 @@
 #include <urdf_model/model.h>
 
 
-#include <tf2_eigen/tf2_eigen.h>
+#include <tf2_eigen/tf2_eigen.hpp>
 //#include <moveit/common_planning_interface_objects/common_objects.h>
 #include <moveit/kinematics_base/kinematics_base.h>
 #include <moveit/robot_model/robot_model.h>
@@ -580,6 +580,22 @@ struct BioIKKinematicsPlugin : kinematics::KinematicsBase {
     LOG_FNC();
     // LOG_VAR(jmg->getName());
     return true;
+  }
+
+  void interpolate(double percentage, Eigen::Isometry3d goal_pose, const kinematics::KinematicsQueryOptions& goal_options, kinematics::KinematicsQueryOptions& intmd_options) const override
+  {
+    const auto* bio_ik_options = dynamic_cast<const BioIKKinematicsQueryOptions*>(&goal_options);
+    auto* intmd_bio_ik_options = dynamic_cast<BioIKKinematicsQueryOptions*>(&intmd_options);
+    if (!bio_ik_options)
+    {
+      throw std::runtime_error("BioIKKinematicsPlugin::interpolate expects BioIKKinematicsQueryOptions as parameters.");
+    }
+    RCLCPP_INFO(node_->get_logger(), "Number of BIO IK goals: %d", static_cast<int>(bio_ik_options->goals.size()));
+    *intmd_bio_ik_options = *bio_ik_options;
+    for (auto& g : intmd_bio_ik_options->goals)
+    {
+      g->interpolate(percentage);
+    }
   }
 };
 } // namespace bio_ik_kinematics_plugin
