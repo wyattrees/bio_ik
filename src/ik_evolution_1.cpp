@@ -67,7 +67,7 @@ struct IKEvolution1 : IKBase
                 for(auto* link_model = robot_model->getLinkModel(tip_name); link_model; link_model = link_model->getParentLinkModel())
                 {
                     auto* joint_model = link_model->getParentJointModel();
-                    const auto v1 = static_cast<size_t>(joint_model->getFirstVariableIndex());
+                    const auto v1 = joint_model->getFirstVariableIndex();
                     const auto vn = joint_model->getVariableCount();
                     for(size_t variable_index = v1; variable_index < v1 + vn; variable_index++)
                         table[variable_index * tip_count + tip_index] = 1;
@@ -105,7 +105,7 @@ struct IKEvolution1 : IKBase
                 {
 
                     auto* joint_model = link_model->getParentJointModel();
-                    const auto vmin = static_cast<size_t>(joint_model->getFirstVariableIndex());
+                    const auto vmin = joint_model->getFirstVariableIndex();
                     const auto vmax = vmin + joint_model->getVariableCount();
                     for(size_t vi = vmin; vi < vmax; vi++)
                         chain_lengths_2[tip_index][vi] = chain_length;

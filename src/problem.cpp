@@ -56,12 +56,12 @@ enum class Problem::GoalType
 
 size_t Problem::addTipLink(const moveit::core::LinkModel* link_model)
 {
-    if(link_tip_indices_[static_cast<size_t>(link_model->getLinkIndex())] < 0)
+    if(link_tip_indices_[link_model->getLinkIndex()] < 0)
     {
-        link_tip_indices_[static_cast<size_t>(link_model->getLinkIndex())] = static_cast<ssize_t>(tip_link_indices.size());
-        tip_link_indices.push_back(static_cast<size_t>(link_model->getLinkIndex()));
+        link_tip_indices_[link_model->getLinkIndex()] = static_cast<ssize_t>(tip_link_indices.size());
+        tip_link_indices.push_back(link_model->getLinkIndex());
     }
-    return static_cast<size_t>(link_tip_indices_[static_cast<size_t>(link_model->getLinkIndex())]);
+    return static_cast<size_t>(link_tip_indices_[link_model->getLinkIndex()]);
 }
 
 Problem::Problem()
@@ -118,7 +118,7 @@ void Problem::initialize(moveit::core::RobotModelConstPtr robot_model, const mov
         {
             if(n == name)
             {
-                active_variables.push_back(static_cast<size_t>(robot_model->getVariableIndex(name)));
+                active_variables.push_back(robot_model->getVariableIndex(name));
                 return static_cast<ssize_t>(active_variables.size()) - 1;
             }
         }
@@ -194,12 +194,12 @@ void Problem::initialize(moveit::core::RobotModelConstPtr robot_model, const mov
         u = 0;
     for(auto tip_index : tip_link_indices)
         for(auto* link_model = robot_model->getLinkModels()[tip_index]; link_model; link_model = link_model->getParentLinkModel())
-            joint_usage_[static_cast<size_t>(link_model->getParentJointModel()->getJointIndex())] = 1;
+            joint_usage_[link_model->getParentJointModel()->getJointIndex()] = 1;
     if(options)
         for(auto& fixed_joint_name : options->fixed_joints)
-            joint_usage_[static_cast<size_t>(robot_model->getJointModel(fixed_joint_name)->getJointIndex())] = 0;
+            joint_usage_[robot_model->getJointModel(fixed_joint_name)->getJointIndex()] = 0;
     for(auto* joint_model : joint_model_group->getActiveJointModels())
-        if(joint_usage_[static_cast<size_t>(joint_model->getJointIndex())] && !joint_model->getMimic())
+        if(joint_usage_[joint_model->getJointIndex()] && !joint_model->getMimic())
             for(auto& n : joint_model->getVariableNames())
                 addActiveVariable(n);
 

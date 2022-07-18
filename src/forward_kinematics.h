@@ -83,7 +83,7 @@ public:
             frame = Frame::identity();
             return;
         }
-        size_t joint_index = static_cast<size_t>(joint_model->getJointIndex());
+        size_t joint_index = joint_model->getJointIndex();
         switch(joint_type)
         {
         case moveit::core::JointModel::REVOLUTE:
@@ -140,11 +140,11 @@ public:
     inline void getJointFrame(const moveit::core::JointModel* joint_model, const std::vector<double>& variables, Frame& frame) { getJointFrame(joint_model, variables.data(), frame); }
 
 protected:
-    inline const Frame& getLinkFrame(const moveit::core::LinkModel* link_model) { return link_frames_[static_cast<size_t>(link_model->getLinkIndex())]; }
+    inline const Frame& getLinkFrame(const moveit::core::LinkModel* link_model) { return link_frames_[link_model->getLinkIndex()]; }
 
     inline bool checkJointMoved(const moveit::core::JointModel* joint_model)
     {
-        size_t i0 = static_cast<size_t>(joint_model->getFirstVariableIndex());
+        size_t i0 = joint_model->getFirstVariableIndex();
         size_t cnt = joint_model->getVariableCount();
         if(cnt == 0) return true;
         if(cnt == 1) return !(variables_[i0] == joint_cache_variables_[i0]);
@@ -154,15 +154,15 @@ protected:
     }
     inline void putJointCache(const moveit::core::JointModel* joint_model, const Frame& frame)
     {
-        joint_cache_frames_[static_cast<size_t>(joint_model->getJointIndex())] = frame;
-        size_t i0 = static_cast<size_t>(joint_model->getFirstVariableIndex());
+        joint_cache_frames_[joint_model->getJointIndex()] = frame;
+        size_t i0 = joint_model->getFirstVariableIndex();
         size_t cnt = joint_model->getVariableCount();
         for(size_t i = i0; i < i0 + cnt; i++)
             joint_cache_variables_[i] = variables_[i];
     }
     inline const Frame& getJointFrame(const moveit::core::JointModel* joint_model)
     {
-        size_t joint_index = static_cast<size_t>(joint_model->getJointIndex());
+        size_t joint_index = joint_model->getJointIndex();
 
         if(!checkJointMoved(joint_model)) return joint_cache_frames_[joint_index];
 
@@ -171,7 +171,7 @@ protected:
         size_t cnt = joint_model->getVariableCount();
         if(cnt)
         {
-            size_t i0 = static_cast<size_t>(joint_model->getFirstVariableIndex());
+            size_t i0 = joint_model->getFirstVariableIndex();
             if(cnt == 1)
                 joint_cache_variables_[i0] = variables_[i0];
             else
@@ -206,7 +206,7 @@ public:
         joint_axis_list_.resize(robot_model_->getJointModelCount());
         for(size_t i = 0; i < joint_axis_list_.size(); i++)
         {
-            auto* joint_model = robot_model_->getJointModel(static_cast<int>(i));
+            auto* joint_model = robot_model_->getJointModel(i);
             if(auto* j = dynamic_cast<const moveit::core::RevoluteJointModel*>(joint_model)) joint_axis_list_[i] = Vector3(j->getAxis().x(), j->getAxis().y(), j->getAxis().z());
             if(auto* j = dynamic_cast<const moveit::core::PrismaticJointModel*>(joint_model)) joint_axis_list_[i] = Vector3(j->getAxis().x(), j->getAxis().y(), j->getAxis().z());
         }
@@ -231,8 +231,8 @@ protected:
     {
         for(auto* joint : robot_model_->getMimicJointModels())
         {
-            auto src = static_cast<size_t>(joint->getMimic()->getFirstVariableIndex());
-            auto dest = static_cast<size_t>(joint->getFirstVariableIndex());
+            auto src = joint->getMimic()->getFirstVariableIndex();
+            auto dest = joint->getFirstVariableIndex();
 
             // TODO: more dimensions ???
             values[dest] = values[src] * joint->getMimicFactor() + joint->getMimicOffset();
@@ -287,7 +287,7 @@ public:
         {
             auto link_index = link_model->getLinkIndex();
             auto* joint_model = link_model->getParentJointModel();
-            size_t vstart = static_cast<size_t>(joint_model->getFirstVariableIndex());
+            size_t vstart = joint_model->getFirstVariableIndex();
             size_t vcount = joint_model->getVariableCount();
             for(size_t vi = vstart; vi < vstart + vcount; vi++)
             {
@@ -301,9 +301,9 @@ public:
         variable_to_link_map_2.resize(robot_model_->getVariableCount());
         for(auto* link_model : link_schedule)
         {
-            auto link_index = static_cast<size_t>(link_model->getLinkIndex());
+            auto link_index = link_model->getLinkIndex();
             auto* joint_model = link_model->getParentJointModel();
-            size_t vstart = static_cast<size_t>(joint_model->getFirstVariableIndex());
+            size_t vstart = joint_model->getFirstVariableIndex();
             size_t vcount = joint_model->getVariableCount();
             for(size_t vi = vstart; vi < vstart + vcount; vi++)
             {
@@ -319,7 +319,7 @@ public:
             {
                 auto* link_model = link_chain[ipos];
                 auto* joint_model = link_model->getParentJointModel();
-                size_t vstart = static_cast<size_t>(joint_model->getFirstVariableIndex());
+                size_t vstart = joint_model->getFirstVariableIndex();
                 size_t vcount = joint_model->getVariableCount();
                 for(size_t vi = vstart; vi < vstart + vcount; vi++)
                 {
@@ -339,17 +339,17 @@ public:
             auto* parent_link_model = joint_model->getParentLinkModel();
             if(parent_link_model)
             {
-                concat(global_frames[static_cast<size_t>(parent_link_model->getLinkIndex())], getLinkFrame(link_model), getJointFrame(joint_model), global_frames[static_cast<size_t>(link_model->getLinkIndex())]);
+                concat(global_frames[parent_link_model->getLinkIndex()], getLinkFrame(link_model), getJointFrame(joint_model), global_frames[link_model->getLinkIndex()]);
             }
             else
             {
-                concat(getLinkFrame(link_model), getJointFrame(joint_model), global_frames[static_cast<size_t>(link_model->getLinkIndex())]);
+                concat(getLinkFrame(link_model), getJointFrame(joint_model), global_frames[link_model->getLinkIndex()]);
             }
             // if(linkModel->getParentLinkModel() && linkModel->getParentLinkModel()->getLinkIndex() > linkModel->getLinkIndex()) { LOG("wrong link order"); throw runtime_error("wrong link order"); }
         }
         for(size_t itip = 0; itip < tip_links.size(); itip++)
         {
-            tip_frames[itip] = global_frames[static_cast<size_t>(tip_links[itip]->getLinkIndex())];
+            tip_frames[itip] = global_frames[tip_links[itip]->getLinkIndex()];
         }
     }
     inline const Frame& getTipFrame(size_t fi) const { return tip_frames[fi]; }
@@ -386,7 +386,7 @@ protected:
 
         // find moved links
         for(auto* link_model : link_schedule)
-            links_changed[static_cast<size_t>(link_model->getLinkIndex())] = false;
+            links_changed[link_model->getLinkIndex()] = false;
         for(auto& x : variable_to_link_map)
         {
             auto variable_index = x.first;
@@ -404,7 +404,7 @@ protected:
             for(size_t ipos = 0; ipos < link_chain.size(); ipos++)
             {
                 auto* link_model = link_chain[ipos];
-                bool changed = links_changed[static_cast<size_t>(link_model->getLinkIndex())];
+                bool changed = links_changed[link_model->getLinkIndex()];
                 if(changed) iposmax = ipos;
             }
 
@@ -413,7 +413,7 @@ protected:
                 auto* link_model = link_chain[ipos];
                 auto* joint_model = link_model->getParentJointModel();
 
-                bool changed = links_changed[static_cast<size_t>(link_model->getLinkIndex())];
+                bool changed = links_changed[link_model->getLinkIndex()];
 
                 if(cache_chain.size() <= ipos || changed)
                 {
@@ -445,7 +445,7 @@ protected:
                         }
                         else
                         {
-                            size_t vstart = static_cast<size_t>(joint_model->getFirstVariableIndex());
+                            size_t vstart = joint_model->getFirstVariableIndex();
                             size_t vcount = joint_model->getVariableCount();
 
                             if(vcount == 1)
@@ -573,7 +573,7 @@ public:
         for(auto* link_model : link_schedule)
         {
             auto* joint_model = link_model->getParentJointModel();
-            joint_dependencies[static_cast<size_t>(joint_model->getJointIndex())].push_back(joint_model);
+            joint_dependencies[joint_model->getJointIndex()].push_back(joint_model);
         }
         for(auto* link_model : link_schedule)
         {
@@ -582,7 +582,7 @@ public:
             {
                 while(mimic->getMimic() && mimic->getMimic() != joint_model)
                     mimic = mimic->getMimic();
-                joint_dependencies[static_cast<size_t>(mimic->getJointIndex())].push_back(joint_model);
+                joint_dependencies[mimic->getJointIndex()].push_back(joint_model);
             }
         }
         tip_dependencies.resize(robot_model_->getJointModelCount() * tip_count);
@@ -593,7 +593,7 @@ public:
             for(auto* link_model = tip_links[tip_index]; link_model; link_model = link_model->getParentLinkModel())
             {
                 auto* joint_model = link_model->getParentJointModel();
-                tip_dependencies[static_cast<size_t>(joint_model->getJointIndex()) * tip_count + tip_index] = 1;
+                tip_dependencies[joint_model->getJointIndex() * tip_count + tip_index] = 1;
             }
         }
     }
@@ -622,7 +622,7 @@ public:
             robot_model_->getJointOfVariable(static_cast<int>(ivar));
         if (var_joint_model->getMimic()) continue;
         for (auto* joint_model :
-            joint_dependencies[static_cast<size_t>(var_joint_model->getJointIndex())]) {
+            joint_dependencies[var_joint_model->getJointIndex()]) {
             double scale = 1;
             for (auto* m = joint_model;
                 m->getMimic() && m->getMimic() != joint_model; m = m->getMimic()) {
@@ -635,9 +635,9 @@ public:
                 continue;
             }
             case moveit::core::JointModel::REVOLUTE: {
-                auto& link_frame = global_frames[static_cast<size_t>(link_model->getLinkIndex())];
+                auto& link_frame = global_frames[link_model->getLinkIndex()];
                 for (size_t itip = 0; itip < tip_count; itip++) {
-                if (!tip_dependencies[static_cast<size_t>(joint_model->getJointIndex()) * tip_count +
+                if (!tip_dependencies[joint_model->getJointIndex() * tip_count +
                                         itip])
                     continue;
 
@@ -646,7 +646,7 @@ public:
                 auto q = link_frame.rot.inverse() * tip_frame.rot;
                 q = q.inverse();
 
-                auto rot = joint_axis_list_[static_cast<size_t>(joint_model->getJointIndex())];
+                auto rot = joint_axis_list_[joint_model->getJointIndex()];
                 quat_mul_vec(q, rot, rot);
 
                 auto vel = link_frame.pos - tip_frame.pos;
@@ -669,9 +669,9 @@ public:
                 continue;
             }
             case moveit::core::JointModel::PRISMATIC: {
-                auto& link_frame = global_frames[static_cast<size_t>(link_model->getLinkIndex())];
+                auto& link_frame = global_frames[link_model->getLinkIndex()];
                 for (size_t itip = 0; itip < tip_count; itip++) {
-                if (!tip_dependencies[static_cast<size_t>(joint_model->getJointIndex()) * tip_count +
+                if (!tip_dependencies[joint_model->getJointIndex() * tip_count +
                                         itip])
                     continue;
 
@@ -680,7 +680,7 @@ public:
                 auto q = link_frame.rot.inverse() * tip_frame.rot;
                 q = q.inverse();
 
-                auto axis = joint_axis_list_[static_cast<size_t>(joint_model->getJointIndex())];
+                auto axis = joint_axis_list_[joint_model->getJointIndex()];
                 auto v = axis;
                 quat_mul_vec(q, axis, v);
 
@@ -700,9 +700,9 @@ public:
                 // future
                 auto ivar2 = ivar;
                 if (joint_model->getMimic())
-                ivar2 = ivar2 - static_cast<size_t>(var_joint_model->getFirstVariableIndex() +
-                        joint_model->getFirstVariableIndex());
-                auto& link_frame_1 = global_frames[static_cast<size_t>(link_model->getLinkIndex())];
+                ivar2 = ivar2 - var_joint_model->getFirstVariableIndex() +
+                        joint_model->getFirstVariableIndex();
+                auto& link_frame_1 = global_frames[link_model->getLinkIndex()];
                 auto v0 = variables_[ivar2];
                 // auto joint_frame_1 = getJointFrame(joint_model);
                 variables_[ivar2] = v0 + step_size;
@@ -710,12 +710,12 @@ public:
                 variables_[ivar2] = v0;
                 Frame link_frame_2;
                 if (auto* parent_link_model = joint_model->getParentLinkModel())
-                concat(global_frames[static_cast<size_t>(parent_link_model->getLinkIndex())],
+                concat(global_frames[parent_link_model->getLinkIndex()],
                         getLinkFrame(link_model), joint_frame_2, link_frame_2);
                 else
                 concat(getLinkFrame(link_model), joint_frame_2, link_frame_2);
                 for (size_t itip = 0; itip < tip_count; itip++) {
-                if (!tip_dependencies[static_cast<size_t>(joint_model->getJointIndex()) * tip_count +
+                if (!tip_dependencies[joint_model->getJointIndex() * tip_count +
                                         itip])
                     continue;
                 auto tip_frame_1 = tip_frames[itip];
@@ -898,7 +898,7 @@ public:
                     {
                     case moveit::core::JointModel::REVOLUTE:
                     {
-                        auto& link_frame = global_frames[static_cast<size_t>(link_model->getLinkIndex())];
+                        auto& link_frame = global_frames[link_model->getLinkIndex()];
                         for(size_t itip = 0; itip < tip_count; itip++)
                         {
                             if(!tip_dependencies[joint_model->getJointIndex() * tip_count + itip]) continue;
@@ -1319,7 +1319,7 @@ public:
                 auto& joint = joint_approximators.back();
                 joint.mutation_index = imut;
                 joint.variable_index = ivar;
-                joint.link_index = static_cast<size_t>(link_model->getLinkIndex());
+                joint.link_index = link_model->getLinkIndex();
                 link_approx_mask[joint.link_index] = 1;
             }
             for(auto* mimic_joint_model : joint_model->getMimicRequests())
@@ -1332,7 +1332,7 @@ public:
                 auto& joint = joint_approximators.back();
                 joint.mutation_index = imut;
                 joint.variable_index = ivar;
-                joint.link_index = static_cast<size_t>(link_model->getLinkIndex());
+                joint.link_index = link_model->getLinkIndex();
                 link_approx_mask[joint.link_index] = 1;
             }
         }
@@ -1345,7 +1345,7 @@ public:
             auto* joint_model = link_model->getParentJointModel();
             joint.delta_position = Vector3(0, 0, 0);
             joint.delta_rotation = Vector3(0, 0, 0);
-            auto& link_frame = global_frames[static_cast<size_t>(link_model->getLinkIndex())];
+            auto& link_frame = global_frames[link_model->getLinkIndex()];
             switch(joint_model->getType())
             {
             case moveit::core::JointModel::REVOLUTE:
@@ -1366,12 +1366,12 @@ public:
         // continue extrapolation to tip frames, if not already done
         for(auto* link_model : tip_links)
         {
-            if(link_approx_mask[static_cast<size_t>(link_model->getLinkIndex())]) continue;
+            if(link_approx_mask[link_model->getLinkIndex()]) continue;
             joint_approximators.emplace_back();
             auto& joint = joint_approximators.back();
             joint.mutation_index = 0;
             joint.variable_index = 0;
-            joint.link_index = static_cast<size_t>(link_model->getLinkIndex());
+            joint.link_index = link_model->getLinkIndex();
             joint.delta_position = Vector3(0, 0, 0);
             joint.delta_rotation = Vector3(0, 0, 0);
             link_approx_mask[joint.link_index] = 1;
@@ -1383,9 +1383,9 @@ public:
         {
             for(auto* link_model = robot_model_->getLinkModel(joint.link_index); link_model;)
             {
-                if(link_approx_mask[static_cast<size_t>(link_model->getLinkIndex())] >= 2)
+                if(link_approx_mask[link_model->getLinkIndex()] >= 2)
                 {
-                    joint.parent_link_index = static_cast<size_t>(link_model->getLinkIndex());
+                    joint.parent_link_index = link_model->getLinkIndex();
                     joint.link_position = global_frames[joint.link_index].pos - global_frames[joint.parent_link_index].pos;
                     link_approx_mask[joint.link_index] = 2;
                     break;
@@ -1506,7 +1506,7 @@ public:
         tipFrames_.resize(tip_link_indices.size());
         tipLinks_.resize(tip_link_indices.size());
         for(size_t i = 0; i < tip_link_indices.size(); i++)
-            tipLinks_[i] = robot_model_->getLinkModel(static_cast<int>(tip_link_indices[i]));
+            tipLinks_[i] = robot_model_->getLinkModel(tip_link_indices[i]);
     }
     void applyConfiguration(const std::vector<double>& jj0)
     {

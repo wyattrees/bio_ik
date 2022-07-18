@@ -433,7 +433,7 @@ struct BioIKKinematicsPlugin : kinematics::KinematicsBase {
         if (!joint_model)
           continue;
         for (size_t vi = 0; vi < joint_model->getVariableCount(); vi++)
-          state.at(static_cast<size_t>(joint_model->getFirstVariableIndex()) + vi) =
+          state.at(joint_model->getFirstVariableIndex() + vi) =
               solution.at(i++);
       }
     }
@@ -581,7 +581,7 @@ struct BioIKKinematicsPlugin : kinematics::KinematicsBase {
           continue;
         for (size_t vi = 0; vi < joint_model->getVariableCount(); vi++)
           solution.push_back(
-              state.at(static_cast<size_t>(joint_model->getFirstVariableIndex()) + vi));
+              state.at(joint_model->getFirstVariableIndex() + vi));
       }
     }
 

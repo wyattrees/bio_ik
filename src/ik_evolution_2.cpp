@@ -118,8 +118,8 @@ template <int memetic> struct IKEvolution2 : IKBase
         quaternion_genes.clear();
         for(size_t igene = 0; igene < problem.active_variables.size(); igene++)
         {
-            auto ivar = static_cast<int>(problem.active_variables[igene]);
-            auto* joint_model = params_.robot_model->getJointOfVariable(ivar);
+            auto ivar = problem.active_variables[igene];
+            auto* joint_model = params_.robot_model->getJointOfVariable(static_cast<int>(ivar));
             if(joint_model->getFirstVariableIndex() + 3 != ivar) continue;
             if(joint_model->getType() != moveit::core::JointModel::FLOATING) continue;
             quaternion_genes.push_back(igene);
